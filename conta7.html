@@ -1,0 +1,635 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Extrato Banco do Brasil</title>
+  <style>
+    :root {
+      --bb-blue: #003da5;
+      --bb-yellow: #fce300;
+      --bb-bg: #f4f6f9;
+      --text: #222222;
+      --credito: #0056b3;
+      --debito: #d9534f;
+      --zerado: #222222;
+      --border: #cccccc;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; font-family: sans-serif; }
+    
+    html, body {
+      width: 100%;
+      height: 100vh;
+      height: 100dvh;
+      background-color: var(--bb-bg);
+      display: flex;
+      justify-content: center;
+      overflow: hidden;
+    }
+
+    .app-container {
+      width: 100vw;
+      max-width: 100%;
+      height: 100vh;
+      height: 100dvh;
+      display: flex;
+      flex-direction: column;
+      background: #ffffff;
+      border: none;
+      margin: 0;
+    }
+
+    /* TOPO FIXO */
+    .topo-fixo {
+      flex-shrink: 0;
+      background: #ffffff;
+      border-bottom: 2px solid var(--border);
+    }
+
+    .header-bb {
+      background-color: var(--bb-blue);
+      color: white;
+      padding: 10px 14px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-weight: bold;
+      font-size: 0.9rem;
+    }
+
+    .stripe-bb { background: var(--bb-yellow); height: 4px; }
+
+    .filter-section {
+      padding: 8px 12px;
+      background: #f0f4f8;
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      gap: 6px;
+    }
+    .filter-section select, .filter-section input {
+      padding: 6px;
+      border: 1px solid var(--border);
+      border-radius: 4px;
+      font-size: 0.8rem;
+      flex: 1;
+    }
+
+    .dashboard-badges {
+      display: flex;
+      justify-content: space-between;
+      padding: 8px 12px;
+      gap: 6px;
+    }
+    .badge-card {
+      flex: 1;
+      background: var(--bb-bg);
+      padding: 6px 2px;
+      border-radius: 4px;
+      text-align: center;
+      border: 1px solid var(--border);
+    }
+    .badge-card span { font-size: 0.65rem; color: #666; font-weight: bold; display: block; }
+    .badge-card div { font-size: 0.8rem; font-weight: bold; margin-top: 2px; }
+    
+    .c-val { color: var(--credito); }
+    .d-val { color: var(--debito); }
+    .saldo-positivo { color: var(--credito) !important; }
+    .saldo-negativo { color: var(--debito) !important; }
+    .saldo-zerado { color: var(--zerado) !important; }
+
+    /* MIOLO ROLÁVEL */
+    .extrato-miolo {
+      flex: 1;
+      overflow-y: auto;
+      padding: 0 12px;
+    }
+
+    .extrato-lista { list-style: none; }
+    .extrato-item {
+      padding: 10px 0;
+      border-bottom: 1px solid #eeeeee;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      cursor: pointer;
+    }
+    
+    .item-title { font-size: 0.85rem; font-weight: bold; }
+    .item-sub { font-size: 0.75rem; color: #666; }
+    .item-valor { font-weight: bold; font-size: 0.85rem; }
+
+    /* RODAPÉ FIXO */
+    .rodape-fixo {
+      flex-shrink: 0;
+      background: #ffffff;
+      border-top: 2px solid var(--border);
+      padding: 8px 10px;
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+
+    .botoes-grid {
+      display: flex;
+      gap: 6px;
+      width: 100%;
+    }
+
+    .btn-rodape {
+      flex: 1;
+      padding: 10px 2px;
+      border: none;
+      border-radius: 4px;
+      color: white;
+      font-weight: bold;
+      font-size: 0.75rem;
+      cursor: pointer;
+      text-align: center;
+    }
+
+    .btn-novo { background-color: #16a34a; }
+    .btn-print { background-color: #0284c7; }
+    .btn-save { background-color: #d97706; }
+    .btn-load { background-color: #4b5563; }
+
+    .db-status {
+      font-size: 0.65rem;
+      color: #003da5;
+      text-align: center;
+      font-weight: bold;
+      height: 12px;
+    }
+
+    /* MODAIS */
+    .modal-overlay {
+      position: fixed;
+      top: 0; left: 0; right: 0; bottom: 0;
+      background: rgba(0,0,0,0.6);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      visibility: hidden;
+      opacity: 0;
+      transition: all 0.2s;
+      padding: 15px;
+      z-index: 999;
+    }
+    .modal-overlay.active { visibility: visible; opacity: 1; }
+    .modal { background: white; width: 100%; max-width: 400px; padding: 16px; border-radius: 8px; }
+    .modal h2 { font-size: 1rem; color: var(--bb-blue); margin-bottom: 12px; display: flex; justify-content: space-between; }
+
+    .form-group { display: flex; flex-direction: column; gap: 8px; }
+    .form-group input, .form-group select {
+      width: 100%;
+      padding: 8px;
+      border: 1px solid var(--border);
+      border-radius: 4px;
+      font-size: 0.85rem;
+    }
+
+    .btn-modal { padding: 8px; border: none; border-radius: 4px; font-weight: bold; cursor: pointer; flex: 1; color: white; background: var(--bb-blue); }
+    .btn-sec { background: #e2e8f0; color: #333; }
+    .btn-danger { background: var(--debito); }
+
+    @media print {
+      .topo-fixo, .rodape-fixo, .filter-section { display: none !important; }
+      .extrato-miolo { overflow: visible; }
+      .app-container { height: auto; border: none; }
+    }
+  </style>
+</head>
+<body>
+
+  <div class="app-container">
+    
+    <!-- TOPO FIXO -->
+    <div class="topo-fixo">
+      <div class="header-bb">
+        <span>Extrato Conta Corrente</span>
+        <span style="background: var(--bb-yellow); color: #000; padding: 2px 6px; border-radius: 3px;">BB</span>
+      </div>
+      <div class="stripe-bb"></div>
+
+      <div class="filter-section">
+        <select id="filtro-modo">
+          <option value="todos">Todos os Períodos</option>
+          <option value="dia">Por Dia</option>
+          <option value="mes">Por Mês</option>
+          <option value="ano">Por Ano</option>
+        </select>
+        <input type="date" id="filtro-data" style="display: none;">
+      </div>
+
+      <div class="dashboard-badges">
+        <div class="badge-card">
+          <span>Créditos (C)</span>
+          <div id="total-c" class="c-val">R$ 0,00</div>
+        </div>
+        <div class="badge-card">
+          <span>Débitos (D)</span>
+          <div id="total-d" class="d-val">R$ 0,00</div>
+        </div>
+        <div class="badge-card">
+          <span>Saldo Total</span>
+          <div id="saldo-total" class="saldo-zerado">R$ 0,00</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- MIOLO ROLÁVEL -->
+    <div class="extrato-miolo">
+      <ul class="extrato-lista" id="tabela-corpo"></ul>
+      <div id="msg-vazia" style="text-align: center; font-size: 0.8rem; color: #888; padding: 20px 0;">Nenhum lançamento registrado.</div>
+    </div>
+
+    <!-- RODAPÉ FIXO -->
+    <div class="rodape-fixo">
+      <div class="db-status" id="status-db">🗄️ Conectando ao Banco de Dados local...</div>
+      <div class="botoes-grid">
+        <button class="btn-rodape btn-novo" id="btn-abrir-novo">＋ Novo</button>
+        <button class="btn-rodape btn-print" onclick="window.print()">🖨️ Imprimir</button>
+        <button class="btn-rodape btn-save" onclick="exportarTXT()">💾 Backup</button>
+        <button class="btn-rodape btn-load" onclick="document.getElementById('input-file-txt').click()">📂 Restore</button>
+      </div>
+      <input type="file" id="input-file-txt" accept=".txt" style="display: none;" onchange="carregarTXT(event)">
+    </div>
+
+  </div>
+
+  <!-- POP-UP NOVO LANÇAMENTO -->
+  <div class="modal-overlay" id="modal-novo">
+    <div class="modal">
+      <h2>
+        <span>Novo Lançamento</span>
+        <button class="btn-modal btn-sec" id="btn-abrir-cat" style="font-size: 0.65rem; padding: 2px 6px; width: auto;">+ Tipos</button>
+      </h2>
+      <form id="form-novo" class="form-group">
+        <input type="text" id="descricao" placeholder="Descrição da Operação" required>
+        <input type="text" id="valor" class="mascara-valor" inputmode="numeric" placeholder="R$ 0,00" required>
+        <input type="date" id="data-lancamento" required>
+        <select id="categoria" required>
+          <option value="">Selecione o Tipo...</option>
+        </select>
+        <div style="display: flex; gap: 6px; margin-top: 8px;">
+          <button type="button" class="btn-modal btn-sec" id="btn-fechar-novo">Cancelar</button>
+          <button type="submit" class="btn-modal">Confirmar</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- POP-UP EDITAR LANÇAMENTO -->
+  <div class="modal-overlay" id="modal-editar">
+    <div class="modal">
+      <h2>Editar Registro</h2>
+      <form id="form-editar" class="form-group">
+        <input type="hidden" id="edit-id">
+        <input type="text" id="edit-descricao" required placeholder="Descrição">
+        <input type="text" id="edit-valor" class="mascara-valor" inputmode="numeric" required placeholder="R$ 0,00">
+        <input type="date" id="edit-data" required>
+        <select id="edit-categoria" required></select>
+        <div style="display: flex; gap: 6px; margin-top: 8px;">
+          <button type="button" class="btn-modal btn-danger" id="btn-excluir">Excluir</button>
+          <button type="button" class="btn-modal btn-sec" id="btn-cancelar-edit">Cancelar</button>
+          <button type="submit" class="btn-modal">Salvar</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- POP-UP CADASTRAR TIPOS -->
+  <div class="modal-overlay" id="modal-categorias">
+    <div class="modal">
+      <h2>Cadastrar Tipo</h2>
+      <form id="form-add-categoria" class="form-group" style="margin-bottom: 12px;">
+        <input type="text" id="cat-nome" placeholder="Nome (ex: Salário)" required>
+        <select id="cat-tipo" required>
+          <option value="C">Crédito (C)</option>
+          <option value="D">Débito (D)</option>
+        </select>
+        <button type="submit" class="btn-modal">Cadastrar</button>
+      </form>
+      <div id="lista-categorias-tags" style="max-height: 120px; overflow-y: auto;"></div>
+      <div style="margin-top: 12px; text-align: right;">
+        <button type="button" class="btn-modal btn-sec" id="btn-fechar-cat" style="width: auto; display: inline-block;">Fechar</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    let db = null;
+    let lancamentos = [];
+    let categorias = [];
+
+    const categoriasPadrao = [
+      { id: 1, nome: 'Proventos / Salário', tipo: 'C' },
+      { id: 2, nome: 'Rendimentos', tipo: 'C' },
+      { id: 3, nome: 'Alimentação / Mercado', tipo: 'D' },
+      { id: 4, nome: 'Pagamentos / Tarifas', tipo: 'D' }
+    ];
+
+    const formNovo = document.getElementById('form-novo');
+    const formEditar = document.getElementById('form-editar');
+    const tabelaCorpo = document.getElementById('tabela-corpo');
+    const msgVazia = document.getElementById('msg-vazia');
+    const filtroModo = document.getElementById('filtro-modo');
+    const filtroData = document.getElementById('filtro-data');
+    const statusDb = document.getElementById('status-db');
+    
+    document.getElementById('data-lancamento').valueAsDate = new Date();
+    filtroData.valueAsDate = new Date();
+
+    // ===================================================
+    // MOTOR DO BANCO DE DADOS (INDEXEDDB)
+    // ===================================================
+    function iniciarBancoDeDados() {
+      const request = indexedDB.open('BB_Extrato_DB', 1);
+
+      request.onupgradeneeded = (e) => {
+        db = e.target.result;
+        
+        // Tabela/Store de Categorias
+        if (!db.objectStoreNames.contains('categorias')) {
+          const catStore = db.createObjectStore('categorias', { keyPath: 'id' });
+          categoriasPadrao.forEach(c => catStore.add(c));
+        }
+
+        // Tabela/Store de Lançamentos
+        if (!db.objectStoreNames.contains('lancamentos')) {
+          db.createObjectStore('lancamentos', { keyPath: 'id' });
+        }
+      };
+
+      request.onsuccess = (e) => {
+        db = e.target.result;
+        statusDb.innerText = '🗄️ Banco de dados local conectado';
+        carregarTudoDoBanco();
+      };
+
+      request.onerror = () => {
+        statusDb.innerText = '❌ Erro ao acessar o Banco de Dados';
+      };
+    }
+
+    function carregarTudoDoBanco() {
+      const tx = db.transaction(['categorias', 'lancamentos'], 'readonly');
+      
+      const reqCat = tx.objectStore('categorias').getAll();
+      const reqLanc = tx.objectStore('lancamentos').getAll();
+
+      reqCat.onsuccess = () => { categorias = reqCat.result; };
+      reqLanc.onsuccess = () => { lancamentos = reqLanc.result; };
+
+      tx.oncomplete = () => {
+        atualizarSelects();
+        atualizarInterface();
+      };
+    }
+
+    function salvarItemBanco(storeName, item) {
+      const tx = db.transaction(storeName, 'readwrite');
+      tx.objectStore(storeName).put(item);
+    }
+
+    function removerItemBanco(storeName, id) {
+      const tx = db.transaction(storeName, 'readwrite');
+      tx.objectStore(storeName).delete(id);
+    }
+
+    // ===================================================
+    // MÁSCARAS E MÉTODOS DE SUPORTE
+    // ===================================================
+    function aplicarMascara(input) {
+      input.addEventListener('input', (e) => {
+        let v = e.target.value.replace(/\D/g, '');
+        if (!v) { e.target.value = ''; return; }
+        e.target.value = `R$ ${(parseFloat(v)/100).toLocaleString('pt-BR', {minimumFractionDigits: 2, maximumFractionDigits: 2})}`;
+      });
+    }
+    document.querySelectorAll('.mascara-valor').forEach(aplicarMascara);
+
+    function m2f(txt) { return parseFloat(txt.replace("R$", "").replace(/\./g, "").replace(",", ".").trim()) || 0; }
+    function f2m(v) { return v.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' }); }
+
+    function formatarDataPTBR(dataISO) {
+      if (!dataISO) return '';
+      const partes = dataISO.split('-');
+      if (partes.length !== 3) return dataISO;
+      return `${partes[2]}/${partes[1]}/${partes[0].slice(-2)}`;
+    }
+
+    filtroModo.addEventListener('change', () => {
+      filtroData.style.display = filtroModo.value === 'todos' ? 'none' : 'block';
+      if (filtroModo.value === 'mes') filtroData.type = 'month';
+      else if (filtroModo.value === 'ano') filtroData.type = 'number';
+      else filtroData.type = 'date';
+      atualizarInterface();
+    });
+    filtroData.addEventListener('input', atualizarInterface);
+
+    function atualizarSelects() {
+      const selectNovo = document.getElementById('categoria');
+      const selectEdit = document.getElementById('edit-categoria');
+      selectNovo.innerHTML = '<option value="">Selecione o Tipo...</option>';
+      selectEdit.innerHTML = '<option value="">Selecione o Tipo...</option>';
+
+      categorias.forEach(c => {
+        selectNovo.innerHTML += `<option value="${c.id}">${c.nome} [${c.tipo}]</option>`;
+        selectEdit.innerHTML += `<option value="${c.id}">${c.nome} [${c.tipo}]</option>`;
+      });
+
+      const tags = document.getElementById('lista-categorias-tags');
+      tags.innerHTML = '';
+      categorias.forEach(c => {
+        tags.innerHTML += `
+          <div style="display:flex; justify-content:space-between; padding:4px 0; border-bottom:1px solid #eee; font-size:0.8rem;">
+            <span><strong>[${c.tipo}]</strong> ${c.nome}</span>
+            <span style="color:var(--debito); cursor:pointer; font-weight:bold;" onclick="removerCat(${c.id})">&times;</span>
+          </div>`;
+      });
+    }
+
+    document.getElementById('form-add-categoria').addEventListener('submit', (e) => {
+      e.preventDefault();
+      const novaCat = { id: Date.now(), nome: document.getElementById('cat-nome').value.trim(), tipo: document.getElementById('cat-tipo').value };
+      categorias.push(novaCat);
+      salvarItemBanco('categorias', novaCat);
+      document.getElementById('cat-nome').value = '';
+      atualizarSelects();
+    });
+
+    function removerCat(id) { 
+      categorias = categorias.filter(c => c.id !== id); 
+      removerItemBanco('categorias', id);
+      atualizarSelects(); 
+    }
+
+    formNovo.addEventListener('submit', (e) => {
+      e.preventDefault();
+      const catId = Number(document.getElementById('categoria').value);
+      const catObj = categorias.find(c => c.id === catId);
+      if (!catObj) return;
+
+      const novoLancamento = {
+        id: Date.now(),
+        descricao: document.getElementById('descricao').value,
+        valor: m2f(document.getElementById('valor').value),
+        data: document.getElementById('data-lancamento').value,
+        categoriaId: catObj.id
+      };
+
+      lancamentos.push(novoLancamento);
+      salvarItemBanco('lancamentos', novoLancamento);
+
+      atualizarInterface();
+      formNovo.reset();
+      document.getElementById('data-lancamento').valueAsDate = new Date();
+      document.getElementById('modal-novo').classList.remove('active');
+    });
+
+    function atualizarInterface() {
+      tabelaCorpo.innerHTML = '';
+      let totalC = 0, totalD = 0;
+      
+      const modo = filtroModo.value;
+      const valData = filtroData.value;
+      
+      const filtrados = lancamentos.filter(item => {
+        if (modo === 'todos' || !valData) return true;
+        if (modo === 'dia') return item.data === valData;
+        if (modo === 'mes') return item.data.startsWith(valData);
+        if (modo === 'ano') return item.data.startsWith(valData);
+        return true;
+      });
+
+      if (filtrados.length === 0) {
+        msgVazia.style.display = 'block';
+      } else {
+        msgVazia.style.display = 'none';
+        filtrados.forEach(item => {
+          const cat = categorias.find(c => c.id === item.categoriaId) || { nome: 'Outros', tipo: 'D' };
+          
+          if (cat.tipo === 'C') totalC += item.valor;
+          else totalD += item.valor;
+
+          const li = document.createElement('li');
+          li.className = 'extrato-item';
+          const classeCor = cat.tipo === 'C' ? 'c-val' : 'd-val';
+
+          li.innerHTML = `
+            <div>
+              <div class="item-title">${item.descricao}</div>
+              <div class="item-sub">${formatarDataPTBR(item.data)} • ${cat.nome}</div>
+            </div>
+            <div class="item-valor ${classeCor}">
+              ${cat.tipo === 'C' ? '+' : '-'} ${f2m(item.valor)} (${cat.tipo})
+            </div>
+          `;
+          li.addEventListener('click', () => abrirModalEdit(item));
+          tabelaCorpo.appendChild(li);
+        });
+      }
+
+      const saldoFinal = totalC - totalD;
+      const elSaldo = document.getElementById('saldo-total');
+
+      document.getElementById('total-c').innerText = f2m(totalC);
+      document.getElementById('total-d').innerText = f2m(totalD);
+      elSaldo.innerText = f2m(saldoFinal);
+
+      elSaldo.classList.remove('saldo-positivo', 'saldo-negativo', 'saldo-zerado');
+      if (saldoFinal > 0) elSaldo.classList.add('saldo-positivo');
+      else if (saldoFinal < 0) elSaldo.classList.add('saldo-negativo');
+      else elSaldo.classList.add('saldo-zerado');
+    }
+
+    function exportarTXT() {
+      const payload = { categorias, lancamentos };
+      const blob = new Blob([JSON.stringify(payload, null, 2)], { type: 'text/plain;charset=utf-8' });
+      const a = document.createElement('a');
+      a.href = URL.createObjectURL(blob);
+      a.download = `backup_banco_${new Date().toISOString().slice(0,10)}.txt`;
+      a.click();
+    }
+
+    function carregarTXT(e) {
+      const file = e.target.files[0];
+      if (!file) return;
+      const reader = new FileReader();
+      reader.onload = (event) => {
+        try {
+          const data = JSON.parse(event.target.result);
+          if (data.categorias && data.lancamentos) {
+            categorias = data.categorias;
+            lancamentos = data.lancamentos;
+
+            // Limpa o banco antigo e importa os novos dados
+            const tx = db.transaction(['categorias', 'lancamentos'], 'readwrite');
+            tx.objectStore('categorias').clear();
+            tx.objectStore('lancamentos').clear();
+            
+            categorias.forEach(c => tx.objectStore('categorias').put(c));
+            lancamentos.forEach(l => tx.objectStore('lancamentos').put(l));
+
+            tx.oncomplete = () => {
+              atualizarSelects();
+              atualizarInterface();
+              alert('Banco de dados restaurado com sucesso!');
+            };
+          } else { throw new Error(); }
+        } catch (err) {
+          alert('Erro ao importar arquivo de backup.');
+        }
+      };
+      reader.readAsText(file);
+    }
+
+    function abrirModalEdit(item) {
+      document.getElementById('edit-id').value = item.id;
+      document.getElementById('edit-descricao').value = item.descricao;
+      document.getElementById('edit-valor').value = f2m(item.valor);
+      document.getElementById('edit-data').value = item.data;
+      document.getElementById('edit-categoria').value = item.categoriaId;
+      document.getElementById('modal-editar').classList.add('active');
+    }
+
+    formEditar.addEventListener('submit', (e) => {
+      e.preventDefault();
+      const id = Number(document.getElementById('edit-id').value);
+      
+      const itemAtualizado = {
+        id,
+        descricao: document.getElementById('edit-descricao').value,
+        valor: m2f(document.getElementById('edit-valor').value),
+        data: document.getElementById('edit-data').value,
+        categoriaId: Number(document.getElementById('edit-categoria').value)
+      };
+
+      lancamentos = lancamentos.map(i => i.id === id ? itemAtualizado : i);
+      salvarItemBanco('lancamentos', itemAtualizado);
+
+      atualizarInterface();
+      document.getElementById('modal-editar').classList.remove('active');
+    });
+
+    document.getElementById('btn-excluir').addEventListener('click', () => {
+      const id = Number(document.getElementById('edit-id').value);
+      lancamentos = lancamentos.filter(i => i.id !== id);
+      removerItemBanco('lancamentos', id);
+
+      atualizarInterface();
+      document.getElementById('modal-editar').classList.remove('active');
+    });
+
+    document.getElementById('btn-abrir-novo').addEventListener('click', () => document.getElementById('modal-novo').classList.add('active'));
+    document.getElementById('btn-fechar-novo').addEventListener('click', () => document.getElementById('modal-novo').classList.remove('active'));
+    document.getElementById('btn-abrir-cat').addEventListener('click', () => document.getElementById('modal-categorias').classList.add('active'));
+    document.getElementById('btn-fechar-cat').addEventListener('click', () => document.getElementById('modal-categorias').classList.remove('active'));
+    document.getElementById('btn-cancelar-edit').addEventListener('click', () => document.getElementById('modal-editar').classList.remove('active'));
+
+    // INICIALIZAÇÃO
+    window.addEventListener('DOMContentLoaded', iniciarBancoDeDados);
+  </script>
+</body>
+</html>

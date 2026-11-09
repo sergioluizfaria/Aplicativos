@@ -1,0 +1,681 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>A Vida é uma Viagem</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700&family=Plus+Jakarta+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+    <style>
+        body {
+            background-color: #020617;
+            color: #f8fafc;
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            overflow: hidden;
+            user-select: none;
+        }
+        .title-font {
+            font-family: 'Cinzel', serif;
+        }
+        canvas {
+            display: block;
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            z-index: 1;
+        }
+        .ui-layer {
+            position: relative;
+            z-index: 10;
+            pointer-events: none;
+        }
+        .interactive {
+            pointer-events: auto;
+        }
+        .modal-glass {
+            background: rgba(15, 23, 42, 0.94);
+            backdrop-filter: blur(16px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+    </style>
+</head>
+<body class="w-screen h-screen flex flex-col justify-between items-center p-6">
+
+    <!-- Canvas principal para estrelas, rastros e réguas -->
+    <canvas id="cosmosCanvas"></canvas>
+
+    <!-- Camada de Interface / UI -->
+    <div class="ui-layer w-full max-w-6xl flex flex-col items-center justify-between h-full py-2">
+        
+        <!-- Topo -->
+        <header class="text-center mt-2 space-y-2">
+            <h1 class="title-font text-xl sm:text-2xl md:text-3xl font-semibold tracking-wide text-sky-200/90 drop-shadow-[0_2px_10px_rgba(56,189,248,0.3)]">
+                A vida é uma viagem entre duas datas: a chegada e a partida.
+            </h1>
+            <div class="flex items-center justify-center gap-3">
+                <p id="timeline-status" class="text-xs sm:text-sm font-mono text-sky-400/90 tracking-widest uppercase">
+                    Aguardando Cadastro de Trajetórias...
+                </p>
+                <div id="live-badge" class="hidden px-2.5 py-0.5 rounded-full bg-emerald-950/80 border border-emerald-500/40 text-xs font-mono text-emerald-300 flex items-center gap-1.5">
+                    <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
+                    <span id="badge-mode">AVANÇANDO HISTÓRIA</span>
+                </div>
+            </div>
+        </header>
+
+        <!-- Banner de Boas-Vindas -->
+        <div id="welcome-banner" class="interactive modal-glass p-8 rounded-2xl max-w-lg text-center shadow-2xl space-y-4 my-auto">
+            <div class="w-16 h-16 mx-auto rounded-full bg-sky-500/20 border border-sky-400/40 flex items-center justify-center text-sky-300 text-2xl">
+                ✨
+            </div>
+            <h2 class="title-font text-xl font-bold text-white">Constelação Familiar Temporal</h2>
+            <p class="text-sm text-slate-300 leading-relaxed">
+                Visualização com rastro de nuvem estelar, réguas temporais sincronizadas e aviso dos anos de partida das estrelas familiares.
+            </p>
+            <button onclick="openModal()" class="w-full py-3 px-6 rounded-xl bg-gradient-to-r from-sky-600 to-indigo-600 hover:from-sky-500 hover:to-indigo-500 text-white font-medium text-sm tracking-wide shadow-lg shadow-sky-500/20 transition-all transform hover:scale-[1.02]">
+                Cadastrar Seres e Iniciar
+            </button>
+        </div>
+
+        <!-- Rodapé -->
+        <footer class="w-full flex justify-between items-center px-4">
+            <div class="text-xs text-slate-500 font-mono">
+                Régua Temporal Sincronizada • Nuvens Estelares
+            </div>
+            <button onclick="openModal()" class="interactive px-4 py-2 rounded-lg bg-slate-800/80 hover:bg-slate-700/80 border border-slate-700 text-slate-300 text-xs font-mono tracking-wider transition-colors flex items-center gap-2">
+                <span>⚙️ Configurar Seres</span>
+            </button>
+        </footer>
+    </div>
+
+    <!-- MODAL DE CADASTRO -->
+    <div id="cadastroModal" class="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-md hidden">
+        <div class="modal-glass w-full max-w-2xl max-h-[90vh] overflow-y-auto rounded-2xl p-6 sm:p-8 shadow-2xl border border-white/10 m-4">
+            
+            <div class="flex justify-between items-center pb-4 mb-6 border-b border-slate-800">
+                <div>
+                    <h3 class="title-font text-lg font-bold text-white">Registro de Trajetórias</h3>
+                    <p class="text-xs text-slate-400">Insira as datas no padrão DD/MM/AAAA (ex: 01/01/1949)</p>
+                </div>
+                <button onclick="closeModal()" class="text-slate-400 hover:text-white text-xl font-bold px-2">&times;</button>
+            </div>
+
+            <form id="travelForm" onsubmit="saveAndStart(event)" class="space-y-6 text-sm">
+                
+                <!-- DURAÇÃO HISTÓRICA -->
+                <div class="p-3 rounded-xl bg-slate-900/60 border border-slate-800 flex items-center justify-between">
+                    <div>
+                        <span class="text-xs font-medium text-slate-200 block">Tempo do Percurso Histórico</span>
+                        <span class="text-[11px] text-slate-400">Duração para percorrer do passado até o Presente</span>
+                    </div>
+                    <div class="flex items-center gap-3">
+                        <input type="range" id="sim_duration" min="15" max="120" step="5" value="45" oninput="document.getElementById('dur_val').innerText = this.value" class="accent-sky-500 cursor-pointer">
+                        <span class="text-xs font-mono text-sky-400 font-bold w-12 text-right"><span id="dur_val">45</span>s</span>
+                    </div>
+                </div>
+
+                <!-- O EU -->
+                <div class="p-4 rounded-xl bg-sky-950/40 border border-sky-800/50 space-y-3">
+                    <span class="text-xs font-mono font-bold text-sky-400 uppercase tracking-widest">Eu (Ser Principal)</span>
+                    <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                        <div>
+                            <label class="block text-xs text-slate-400 mb-1">Título</label>
+                            <input type="text" id="eu_nome" value="Eu" readonly class="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-slate-300 font-medium">
+                        </div>
+                        <div>
+                            <label class="block text-xs text-slate-400 mb-1">Chegada (Nasc.) *</label>
+                            <input type="text" id="eu_nasc" placeholder="01/01/1975" required class="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-white focus:border-sky-500 focus:outline-none">
+                        </div>
+                        <div>
+                            <label class="block text-xs text-slate-400 mb-1">Partida (Opcional)</label>
+                            <input type="text" id="eu_morte" placeholder="Em aberto (Hoje)" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-white focus:border-sky-500 focus:outline-none">
+                        </div>
+                    </div>
+                </div>
+
+                <!-- PAIS -->
+                <div class="space-y-4">
+                    <h4 class="text-xs font-mono text-slate-400 uppercase tracking-wider">Pais e Origem</h4>
+                    
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        <!-- Pai -->
+                        <div class="p-3 rounded-xl bg-slate-900/50 border border-slate-800 space-y-2">
+                            <span class="text-xs font-medium text-slate-300">Pai</span>
+                            <div class="grid grid-cols-2 gap-2">
+                                <input type="text" id="pai_nasc" value="01/01/1949" placeholder="Nasc: DD/MM/AAAA" class="bg-slate-900 border border-slate-700 rounded-lg px-2 py-1.5 text-xs text-white">
+                                <input type="text" id="pai_morte" placeholder="Morte: DD/MM/AAAA" class="bg-slate-900 border border-slate-700 rounded-lg px-2 py-1.5 text-xs text-white">
+                            </div>
+                        </div>
+
+                        <!-- Mãe -->
+                        <div class="p-3 rounded-xl bg-slate-900/50 border border-slate-800 space-y-2">
+                            <span class="text-xs font-medium text-slate-300">Mãe</span>
+                            <div class="grid grid-cols-2 gap-2">
+                                <input type="text" id="mae_nasc" value="01/01/1949" placeholder="Nasc: DD/MM/AAAA" class="bg-slate-900 border border-slate-700 rounded-lg px-2 py-1.5 text-xs text-white">
+                                <input type="text" id="mae_morte" placeholder="Morte: DD/MM/AAAA" class="bg-slate-900 border border-slate-700 rounded-lg px-2 py-1.5 text-xs text-white">
+                            </div>
+                        </div>
+
+                        <!-- Esposa / Namorada -->
+                        <div class="p-3 rounded-xl bg-slate-900/50 border border-slate-800 space-y-2 sm:col-span-2">
+                            <span class="text-xs font-medium text-slate-300">Esposa / Namorada (Se junta ao Eu na data de conhecimento)</span>
+                            <div class="grid grid-cols-1 sm:grid-cols-3 gap-2">
+                                <input type="text" id="conjuge_nasc" placeholder="Nasc: DD/MM/AAAA" class="bg-slate-900 border border-slate-700 rounded-lg px-2 py-1.5 text-xs text-white">
+                                <input type="text" id="conjuge_conheceu" placeholder="Data Conheceu: DD/MM/AAAA" class="bg-slate-900 border border-slate-700 rounded-lg px-2 py-1.5 text-xs text-white border-pink-500/40">
+                                <input type="text" id="conjuge_morte" placeholder="Morte: DD/MM/AAAA" class="bg-slate-900 border border-slate-700 rounded-lg px-2 py-1.5 text-xs text-white">
+                            </div>
+                        </div>
+
+                        <!-- Irmãos -->
+                        <div class="p-3 rounded-xl bg-slate-900/50 border border-slate-800 space-y-2 sm:col-span-2">
+                            <div class="flex justify-between items-center">
+                                <span class="text-xs font-medium text-slate-300">Irmãos</span>
+                                <input type="number" id="qtd_irmaos" min="0" max="4" value="1" onchange="renderIrmaosInputs()" class="w-12 bg-slate-800 text-center rounded text-xs text-white py-0.5">
+                            </div>
+                            <div id="irmaos_container" class="space-y-2 max-h-32 overflow-y-auto pr-1">
+                                <!-- Dinâmico -->
+                            </div>
+                        </div>
+
+                        <!-- Filhos -->
+                        <div class="p-3 rounded-xl bg-slate-900/50 border border-slate-800 space-y-2 sm:col-span-2">
+                            <div class="flex justify-between items-center">
+                                <span class="text-xs font-medium text-slate-300">Filhos</span>
+                                <input type="number" id="qtd_filhos" min="0" max="4" value="1" onchange="renderFilhosInputs()" class="w-12 bg-slate-800 text-center rounded text-xs text-white py-0.5">
+                            </div>
+                            <div id="filhos_container" class="space-y-2 max-h-32 overflow-y-auto pr-1">
+                                <!-- Dinâmico -->
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Botões -->
+                <div class="flex justify-end gap-3 pt-4 border-t border-slate-800">
+                    <button type="button" onclick="closeModal()" class="px-4 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs font-medium">Cancelar</button>
+                    <button type="submit" class="px-6 py-2 rounded-xl bg-sky-600 hover:bg-sky-500 text-white text-xs font-medium shadow-lg shadow-sky-600/30">Iniciar Simulação Viva</button>
+                </div>
+
+            </form>
+        </div>
+    </div>
+
+    <!-- SCRIPT DE FÍSICA E ANIMAÇÃO -->
+    <script>
+        const canvas = document.getElementById('cosmosCanvas');
+        const ctx = canvas.getContext('2d');
+
+        let width, height;
+        function resize() {
+            width = canvas.width = window.innerWidth;
+            height = canvas.height = window.innerHeight;
+        }
+        window.addEventListener('resize', resize);
+        resize();
+
+        // Estrelas de fundo
+        const backgroundStars = [];
+        for (let i = 0; i < 250; i++) {
+            backgroundStars.push({
+                x: Math.random() * width,
+                y: Math.random() * height,
+                radius: Math.random() * 1.5,
+                alpha: Math.random(),
+                speed: Math.random() * 0.02 + 0.005
+            });
+        }
+
+        let simulationActive = false;
+        let entities = [];
+        let simulationStartTime = 0;
+        let HISTORIC_SPEED_SECONDS = 45;
+        let minGlobalDate = 0;
+        const nowRealDate = Date.now();
+
+        // Animações de texto flutuante (Anos de partida)
+        const activeYearFades = [];
+
+        function parseDate(str) {
+            if (!str || typeof str !== 'string') return null;
+            const cleanStr = str.trim();
+            if (cleanStr.length < 6) return null;
+            const parts = cleanStr.split('/');
+            if (parts.length !== 3) return null;
+
+            let day = parseInt(parts[0], 10);
+            let month = parseInt(parts[1], 10) - 1;
+            let year = parseInt(parts[2], 10);
+
+            if (isNaN(day) || isNaN(month) || isNaN(year)) return null;
+            if (year < 100) year += year < 50 ? 2000 : 1900;
+
+            return new Date(year, month, day).getTime();
+        }
+
+        function renderIrmaosInputs() {
+            const qtd = parseInt(document.getElementById('qtd_irmaos').value) || 0;
+            const container = document.getElementById('irmaos_container');
+            container.innerHTML = '';
+            for (let i = 1; i <= qtd; i++) {
+                container.innerHTML += `
+                    <div class="grid grid-cols-2 gap-2">
+                        <input type="text" id="irmao_${i}_nasc" placeholder="Irmão(ã) ${i} Nasc (DD/MM/AAAA)" class="bg-slate-900 border border-slate-700 rounded-lg px-2 py-1.5 text-xs text-white">
+                        <input type="text" id="irmao_${i}_morte" placeholder="Partida (Opcional)" class="bg-slate-900 border border-slate-700 rounded-lg px-2 py-1.5 text-xs text-white">
+                    </div>
+                `;
+            }
+        }
+
+        function renderFilhosInputs() {
+            const qtd = parseInt(document.getElementById('qtd_filhos').value) || 0;
+            const container = document.getElementById('filhos_container');
+            container.innerHTML = '';
+            for (let i = 1; i <= qtd; i++) {
+                container.innerHTML += `
+                    <div class="grid grid-cols-2 gap-2">
+                        <input type="text" id="filho_${i}_nasc" placeholder="Filho ${i} Nasc (DD/MM/AAAA)" class="bg-slate-900 border border-slate-700 rounded-lg px-2 py-1.5 text-xs text-white">
+                        <input type="text" id="filho_${i}_morte" placeholder="Partida (Opcional)" class="bg-slate-900 border border-slate-700 rounded-lg px-2 py-1.5 text-xs text-white">
+                    </div>
+                `;
+            }
+        }
+        renderIrmaosInputs();
+        renderFilhosInputs();
+
+        function openModal() {
+            document.getElementById('cadastroModal').classList.remove('hidden');
+        }
+
+        function closeModal() {
+            document.getElementById('cadastroModal').classList.add('hidden');
+        }
+
+        function saveAndStart(e) {
+            if (e) e.preventDefault();
+            closeModal();
+            document.getElementById('welcome-banner').style.display = 'none';
+            document.getElementById('live-badge').classList.remove('hidden');
+
+            HISTORIC_SPEED_SECONDS = parseInt(document.getElementById('sim_duration').value) || 45;
+            entities = [];
+
+            const FAR_FUTURE = nowRealDate + (1000 * 60 * 60 * 24 * 365 * 200);
+
+            // 1. O Eu
+            const euNasc = parseDate(document.getElementById('eu_nasc').value);
+            if (!euNasc) {
+                alert("Insira a data de nascimento do 'Eu'.");
+                return;
+            }
+            const euMorte = parseDate(document.getElementById('eu_morte').value) || FAR_FUTURE;
+            entities.push({
+                title: "Eu",
+                nasc: euNasc,
+                morte: euMorte,
+                role: 'eu',
+                baseOffset: 0,
+                color: '#38bdf8',
+                hasTriggeredDeathFade: false
+            });
+
+            // 2. Pai
+            const paiNasc = parseDate(document.getElementById('pai_nasc').value);
+            const paiMorte = parseDate(document.getElementById('pai_morte').value) || FAR_FUTURE;
+            if (paiNasc) {
+                entities.push({
+                    title: "Pai",
+                    nasc: paiNasc,
+                    morte: paiMorte,
+                    role: 'pai',
+                    baseOffset: -240,
+                    color: '#a78bfa',
+                    hasTriggeredDeathFade: false
+                });
+            }
+
+            // 3. Mãe
+            const maeNasc = parseDate(document.getElementById('mae_nasc').value);
+            const maeMorte = parseDate(document.getElementById('mae_morte').value) || FAR_FUTURE;
+            if (maeNasc) {
+                entities.push({
+                    title: "Mãe",
+                    nasc: maeNasc,
+                    morte: maeMorte,
+                    role: 'mae',
+                    baseOffset: 240,
+                    color: '#a78bfa',
+                    hasTriggeredDeathFade: false
+                });
+            }
+
+            // 4. Esposa / Namorada
+            const conjConheceu = parseDate(document.getElementById('conjuge_conheceu').value) || parseDate(document.getElementById('conjuge_nasc').value);
+            const conjMorte = parseDate(document.getElementById('conjuge_morte').value) || FAR_FUTURE;
+            if (conjConheceu) {
+                entities.push({
+                    title: "Esposa / Namorada",
+                    nasc: conjConheceu,
+                    morte: conjMorte,
+                    role: 'esposa',
+                    baseOffset: 260,
+                    color: '#f472b6',
+                    hasTriggeredDeathFade: false
+                });
+            }
+
+            // 5. Irmãos
+            const qtdIrmaos = parseInt(document.getElementById('qtd_irmaos').value) || 0;
+            for (let i = 1; i <= qtdIrmaos; i++) {
+                const iNasc = parseDate(document.getElementById(`irmao_${i}_nasc`).value);
+                const iMorte = parseDate(document.getElementById(`irmao_${i}_morte`).value) || FAR_FUTURE;
+                if (iNasc) {
+                    entities.push({
+                        title: `Irmão(ã) ${i}`,
+                        nasc: iNasc,
+                        morte: iMorte,
+                        role: 'irmao',
+                        baseOffset: 120 + (i * 70),
+                        color: '#60a5fa',
+                        hasTriggeredDeathFade: false
+                    });
+                }
+            }
+
+            // 6. Filhos
+            const qtdFilhos = parseInt(document.getElementById('qtd_filhos').value) || 0;
+            for (let i = 1; i <= qtdFilhos; i++) {
+                const fNasc = parseDate(document.getElementById(`filho_${i}_nasc`).value);
+                const fMorte = parseDate(document.getElementById(`filho_${i}_morte`).value) || FAR_FUTURE;
+                if (fNasc) {
+                    entities.push({
+                        title: `Filho(a) ${i}`,
+                        nasc: fNasc,
+                        morte: fMorte,
+                        role: 'filho',
+                        baseOffset: -120 - (i * 70),
+                        color: '#34d399',
+                        hasTriggeredDeathFade: false
+                    });
+                }
+            }
+
+            // Data global mais antiga
+            minGlobalDate = Infinity;
+            entities.forEach(ent => {
+                if (ent.nasc < minGlobalDate) minGlobalDate = ent.nasc;
+            });
+
+            // Personagens Ocasionais Rápidos
+            const casualTitles = ["Amigo", "Primo", "Amiga", "Colega de Escola", "Vizinho", "Professor", "Colega de Trabalho"];
+            const timeSpan = nowRealDate - minGlobalDate;
+            casualTitles.forEach((title) => {
+                const rStart = Math.random() * 0.8;
+                const rDur = 0.08 + Math.random() * 0.12; // Duração menor para não ficarem fixos
+                const nasc = minGlobalDate + timeSpan * rStart;
+                const morte = nasc + timeSpan * rDur;
+
+                entities.push({
+                    title: title,
+                    nasc: nasc,
+                    morte: morte,
+                    role: 'casual',
+                    baseOffset: (Math.random() - 0.5) * (width * 0.7),
+                    yRandomFactor: 0.1 + Math.random() * 0.4,
+                    color: '#fbbf24',
+                    diagDir: Math.random() > 0.5 ? 1 : -1
+                });
+            });
+
+            simulationStartTime = performance.now();
+            simulationActive = true;
+        }
+
+        // Desenhar estrela brilhante no lugar do círculo simples
+        function drawGlowingStar(x, y, radius, color, isEu) {
+            ctx.save();
+            ctx.translate(x, y);
+
+            // Halo/Glow externo
+            const glowGrad = ctx.createRadialGradient(0, 0, 0, 0, 0, radius * 3.5);
+            glowGrad.addColorStop(0, color);
+            glowGrad.addColorStop(0.4, color);
+            glowGrad.addColorStop(1, 'transparent');
+
+            ctx.beginPath();
+            ctx.arc(0, 0, radius * 3.5, 0, Math.PI * 2);
+            ctx.fillStyle = glowGrad;
+            ctx.globalAlpha = 0.7;
+            ctx.fill();
+
+            // Brilho da estrela em cruz (Spikes / Lens Flare)
+            const spikeLen = radius * (isEu ? 4.5 : 3.0);
+            ctx.strokeStyle = '#ffffff';
+            ctx.lineWidth = isEu ? 2.5 : 1.5;
+            ctx.globalAlpha = 0.9;
+
+            ctx.beginPath();
+            ctx.moveTo(-spikeLen, 0); ctx.lineTo(spikeLen, 0);
+            ctx.moveTo(0, -spikeLen); ctx.lineTo(0, spikeLen);
+            ctx.stroke();
+
+            // Núcleo branco reluzente
+            ctx.beginPath();
+            ctx.arc(0, 0, radius, 0, Math.PI * 2);
+            ctx.fillStyle = '#ffffff';
+            ctx.globalAlpha = 1.0;
+            ctx.fill();
+
+            ctx.restore();
+        }
+
+        // Desenhar a nuvem esfumaçada do rastro
+        function drawSmokyTrail(x, y, length, color, widthSize) {
+            const numParticles = 12;
+            for (let i = 0; i < numParticles; i++) {
+                const pRatio = i / numParticles;
+                const pY = y + pRatio * length;
+                const pWidth = widthSize * (1 + pRatio * 2.8); // Expande a nuvem na ponta
+                const pAlpha = (1 - pRatio) * 0.35; // Esfumaça e apaga a ponta
+
+                const grad = ctx.createRadialGradient(x, pY, 0, x, pY, pWidth);
+                grad.addColorStop(0, color);
+                grad.addColorStop(0.5, color);
+                grad.addColorStop(1, 'transparent');
+
+                ctx.beginPath();
+                ctx.arc(x, pY, pWidth, 0, Math.PI * 2);
+                ctx.fillStyle = grad;
+                ctx.globalAlpha = pAlpha;
+                ctx.fill();
+            }
+        }
+
+        // Desenhar a Régua Temporal no Lado Esquerdo
+        function drawTimelineRuler(currentSimulatedTime) {
+            const startYear = new Date(minGlobalDate).getFullYear();
+            const currentYear = new Date(currentSimulatedTime).getFullYear();
+            const rulerX = 45;
+
+            ctx.save();
+            ctx.strokeStyle = 'rgba(56, 189, 248, 0.25)';
+            ctx.fillStyle = 'rgba(148, 163, 184, 0.6)';
+            ctx.font = '10px monospace';
+            ctx.textAlign = 'right';
+
+            // Linha vertical principal
+            ctx.beginPath();
+            ctx.moveTo(rulerX, 60);
+            ctx.lineTo(rulerX, height - 60);
+            ctx.stroke();
+
+            const yearSpan = Math.max(1, currentYear - startYear + 5);
+            const totalRulerHeight = height - 120;
+            const stepY = totalRulerHeight / Math.min(25, yearSpan);
+
+            for (let i = 0; i <= 20; i++) {
+                const yearLabel = startYear + Math.floor((i / 20) * yearSpan);
+                const markY = height - 60 - (i * (totalRulerHeight / 20));
+
+                ctx.beginPath();
+                ctx.moveTo(rulerX, markY);
+                ctx.lineTo(rulerX - (yearLabel % 5 === 0 ? 10 : 5), markY);
+                ctx.stroke();
+
+                if (yearLabel % 5 === 0 || yearLabel === currentYear) {
+                    ctx.fillStyle = yearLabel === currentYear ? '#38bdf8' : 'rgba(148, 163, 184, 0.6)';
+                    ctx.fillText(yearLabel.toString(), rulerX - 14, markY + 3);
+                }
+            }
+            ctx.restore();
+        }
+
+        // Loop de Animação Principal
+        function animate(now) {
+            ctx.clearRect(0, 0, width, height);
+
+            // Estrelas piscantes de fundo
+            backgroundStars.forEach(s => {
+                s.alpha += s.speed;
+                if (s.alpha > 1 || s.alpha < 0.2) s.speed = -s.speed;
+                ctx.fillStyle = `rgba(255, 255, 255, ${s.alpha})`;
+                ctx.fillRect(s.x, s.y, s.radius, s.radius);
+            });
+
+            if (simulationActive && entities.length > 0) {
+                const elapsedRealSeconds = (now - simulationStartTime) / 1000;
+                let currentSimulatedTime;
+
+                if (elapsedRealSeconds <= HISTORIC_SPEED_SECONDS) {
+                    const historicProgress = elapsedRealSeconds / HISTORIC_SPEED_SECONDS;
+                    currentSimulatedTime = minGlobalDate + (nowRealDate - minGlobalDate) * historicProgress;
+                    document.getElementById('badge-mode').innerText = "AVANÇANDO HISTÓRIA";
+                } else {
+                    const extraSeconds = elapsedRealSeconds - HISTORIC_SPEED_SECONDS;
+                    currentSimulatedTime = nowRealDate + (extraSeconds * 1000);
+                    document.getElementById('badge-mode').innerText = "TEMPO REAL VIVO";
+                }
+
+                const currentSimDate = new Date(currentSimulatedTime).toLocaleDateString('pt-BR');
+                const currentSimTimeStr = new Date(currentSimulatedTime).toLocaleTimeString('pt-BR');
+                document.getElementById('timeline-status').innerText = `${currentSimDate} ${currentSimTimeStr}`;
+
+                // Desenha a régua lateral sincronizada
+                drawTimelineRuler(currentSimulatedTime);
+
+                const centerX = width / 2;
+                const centerY = height * 0.65;
+
+                const euEntity = entities.find(e => e.role === 'eu');
+                const euHasBorn = euEntity && currentSimulatedTime >= euEntity.nasc;
+
+                entities.forEach(e => {
+                    let isVisible = false;
+                    let alphaFactor = 0;
+
+                    if (currentSimulatedTime >= e.nasc && currentSimulatedTime <= e.morte) {
+                        isVisible = true;
+                        const fadeSpan = (nowRealDate - minGlobalDate) * 0.02;
+                        if (currentSimulatedTime - e.nasc < fadeSpan) {
+                            alphaFactor = (currentSimulatedTime - e.nasc) / fadeSpan;
+                        } else if (e.morte - currentSimulatedTime < fadeSpan && e.morte < nowRealDate) {
+                            const pOut = (e.morte - currentSimulatedTime) / fadeSpan;
+                            alphaFactor = pOut;
+                        } else {
+                            alphaFactor = 1.0;
+                        }
+                    }
+
+                    if (isVisible && alphaFactor > 0) {
+                        let targetX, targetY;
+                        const ageSpan = Math.max(1, e.morte - e.nasc);
+                        const lifeProgress = Math.min(1.0, (currentSimulatedTime - e.nasc) / ageSpan);
+
+                        // Aproximação ao "Eu"
+                        let currentOffset = e.baseOffset;
+                        if (euHasBorn) {
+                            if (e.role === 'pai') currentOffset = -110;
+                            if (e.role === 'mae') currentOffset = 110;
+                            if (e.role === 'esposa') currentOffset = 160;
+                            if (e.role === 'filho') currentOffset = e.baseOffset * 0.65;
+                        }
+
+                        if (e.role === 'casual') {
+                            // Personagens Ocasionais cruzam mais rápido em diagonal
+                            targetX = centerX + e.baseOffset + ((lifeProgress - 0.5) * 280 * e.diagDir);
+                            targetY = (height * e.yRandomFactor) - (lifeProgress * 250);
+                        } else {
+                            targetX = centerX + currentOffset;
+
+                            // Verificação do Momento da Partida
+                            const timeRemaining = e.morte - currentSimulatedTime;
+                            const dyingWindow = (nowRealDate - minGlobalDate) * 0.05;
+
+                            if (e.morte < nowRealDate && timeRemaining < dyingWindow) {
+                                const dyingProgress = 1.0 - (timeRemaining / dyingWindow);
+                                targetY = centerY - (lifeProgress * 140) - (dyingProgress * 240); // Sobe para o topo
+
+                                // Dispara a animação do Ano de Partida no centro da tela
+                                if (!e.hasTriggeredDeathFade) {
+                                    e.hasTriggeredDeathFade = true;
+                                    const deathYear = new Date(e.morte).getFullYear();
+                                    activeYearFades.push({
+                                        year: deathYear,
+                                        title: e.title,
+                                        startTime: now,
+                                        duration: 3000
+                                    });
+                                }
+                            } else {
+                                targetY = centerY - (lifeProgress * 140) + Math.sin(now / 400 + currentOffset) * 4;
+                            }
+                        }
+
+                        // Rastro Esfumaçado
+                        const trailLength = e.role === 'eu' ? 140 : 95;
+                        drawSmokyTrail(targetX, targetY, trailLength, e.color, e.role === 'eu' ? 8 : 5);
+
+                        // Estrela Brilhante em vez de bola comum
+                        drawGlowingStar(targetX, targetY, e.role === 'eu' ? 6 : 4, e.color, e.role === 'eu');
+
+                        // Título
+                        ctx.font = `${e.role === 'eu' ? '600 14px' : '500 12px'} 'Plus Jakarta Sans', sans-serif`;
+                        ctx.fillStyle = `rgba(248, 250, 252, ${Math.min(1.0, alphaFactor * 0.95)})`;
+                        ctx.textAlign = 'center';
+                        ctx.fillText(e.title, targetX, targetY - 20);
+                    }
+                });
+
+                // Renderiza Animações de Anos de Partida Flutuantes (Fade & Scale)
+                for (let i = activeYearFades.length - 1; i >= 0; i--) {
+                    const item = activeYearFades[i];
+                    const elapsed = now - item.startTime;
+                    if (elapsed > item.duration) {
+                        activeYearFades.splice(i, 1);
+                    } else {
+                        const progress = elapsed / item.duration;
+                        const alpha = Math.sin(progress * Math.PI); // Fade in e out suave
+                        const scale = 1 + progress * 0.5; // Cresce suavemente
+
+                        ctx.save();
+                        ctx.translate(centerX, height * 0.35);
+                        ctx.scale(scale, scale);
+                        ctx.font = 'bold 36px "Cinzel", serif';
+                        ctx.fillStyle = `rgba(248, 113, 113, ${alpha * 0.85})`;
+                        ctx.textAlign = 'center';
+                        ctx.fillText(`${item.title}: Partida em ${item.year}`, 0, 0);
+                        ctx.restore();
+                    }
+                }
+            }
+
+            requestAnimationFrame(animate);
+        }
+
+        requestAnimationFrame(animate);
+    </script>
+</body>
+</html>

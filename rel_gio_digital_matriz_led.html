@@ -1,0 +1,618 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title> </title>
+    <!-- Tailwind CSS para estruturação rápida e moderna -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Fonte retro-tecnológica Orbitron -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@600;700;900&display=swap" rel="stylesheet">
+    <style>
+        /* Reset e estilização base */
+        body {
+            background-color: #030805;
+            color: #e2e8f0;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            overflow-x: hidden;
+            user-select: none;
+            -webkit-user-select: none;
+        }
+
+        /* Fonte para texto complementar da data */
+        .digital-font {
+            font-family: 'Orbitron', monospace, sans-serif;
+        }
+
+        /* Moldura de painel de controle industrial */
+        .led-panel {
+            background: linear-gradient(145deg, #07120b, #010402);
+            box-shadow: inset 0 0 35px rgba(0, 0, 0, 0.95), 
+                        0 15px 35px rgba(0, 0, 0, 0.8),
+                        0 0 3px rgba(0, 255, 102, 0.15);
+            border: 2px solid #0f2b1a;
+            transition: border-color 0.4s ease, box-shadow 0.4s ease;
+        }
+
+        /* Grade individual do dígito (5 colunas x 7 linhas) */
+        .digit-grid {
+            display: grid;
+            grid-template-columns: repeat(5, minmax(0, 1fr));
+            grid-template-rows: repeat(7, minmax(0, 1fr));
+            gap: 3px;
+        }
+
+        @media (min-width: 640px) {
+            .digit-grid { gap: 5px; }
+        }
+        @media (min-width: 1024px) {
+            .digit-grid { gap: 7px; }
+        }
+
+        /* Células LED individuais */
+        .led-dot {
+            aspect-ratio: 1 / 1;
+            border-radius: 2px;
+            transition: background-color 0.08s ease, border-color 0.08s ease, box-shadow 0.08s ease;
+        }
+
+        /* --- TEMA 1: VERDE NEON (PADRÃO) --- */
+        .theme-green .led-panel {
+            border-color: #0f2b1a;
+            box-shadow: inset 0 0 35px rgba(0, 0, 0, 0.95), 0 0 25px rgba(0, 255, 102, 0.1);
+        }
+        .theme-green .led-off {
+            background-color: #04160b;
+            border: 1px solid #072614;
+        }
+        .theme-green .led-on {
+            background-color: #00ff66;
+            border: 1px solid #66ff99;
+            box-shadow: 0 0 4px rgba(0, 255, 102, 0.6);
+        }
+        .theme-green .digital-text {
+            color: #00ff66;
+            text-shadow: 0 0 10px rgba(0, 255, 102, 0.4);
+        }
+
+        /* --- TEMA 2: ÂMBAR VINTAGE --- */
+        .theme-amber .led-panel {
+            border-color: #331f05;
+            box-shadow: inset 0 0 35px rgba(0, 0, 0, 0.95), 0 0 25px rgba(255, 153, 0, 0.1);
+        }
+        .theme-amber .led-off {
+            background-color: #170e03;
+            border: 1px solid #291805;
+        }
+        .theme-amber .led-on {
+            background-color: #ff9900;
+            border: 1px solid #ffbb55;
+            box-shadow: 0 0 4px rgba(255, 153, 0, 0.6);
+        }
+        .theme-amber .digital-text {
+            color: #ff9900;
+            text-shadow: 0 0 10px rgba(255, 153, 0, 0.4);
+        }
+
+        /* --- TEMA 3: AZUL NEON --- */
+        .theme-cyan .led-panel {
+            border-color: #082938;
+            box-shadow: inset 0 0 35px rgba(0, 0, 0, 0.95), 0 0 25px rgba(0, 204, 255, 0.1);
+        }
+        .theme-cyan .led-off {
+            background-color: #031521;
+            border: 1px solid #06263b;
+        }
+        .theme-cyan .led-on {
+            background-color: #00ccff;
+            border: 1px solid #66e0ff;
+            box-shadow: 0 0 4px rgba(0, 204, 255, 0.6);
+        }
+        .theme-cyan .digital-text {
+            color: #00ccff;
+            text-shadow: 0 0 10px rgba(0, 204, 255, 0.4);
+        }
+
+        /* --- TEMA 4: VERMELHO DIGITAL --- */
+        .theme-red .led-panel {
+            border-color: #380808;
+            box-shadow: inset 0 0 35px rgba(0, 0, 0, 0.95), 0 0 25px rgba(255, 26, 26, 0.1);
+        }
+        .theme-red .led-off {
+            background-color: #1a0303;
+            border: 1px solid #2e0606;
+        }
+        .theme-red .led-on {
+            background-color: #ff1a1a;
+            border: 1px solid #ff6666;
+            box-shadow: 0 0 4px rgba(255, 26, 26, 0.6);
+        }
+        .theme-red .digital-text {
+            color: #ff1a1a;
+            text-shadow: 0 0 10px rgba(255, 26, 26, 0.4);
+        }
+
+        /* --- TEMA 5: BRANCO CRISTAL (ADICIONADO E CORRIGIDO) --- */
+        .theme-white .led-panel {
+            border-color: #2b2b2b;
+            box-shadow: inset 0 0 35px rgba(0, 0, 0, 0.95), 0 0 25px rgba(255, 255, 255, 0.08);
+        }
+        .theme-white .led-off {
+            background-color: #121212;
+            border: 1px solid #222222;
+        }
+        .theme-white .led-on {
+            background-color: #ffffff;
+            border: 1px solid #e6e6e6;
+            box-shadow: 0 0 4px rgba(255, 255, 255, 0.7);
+        }
+        .theme-white .digital-text {
+            color: #ffffff;
+            text-shadow: 0 0 10px rgba(255, 255, 255, 0.4);
+        }
+
+        /* Separador de Dois Pontos (1 coluna x 7 linhas) */
+        .colon-container {
+            display: grid;
+            grid-template-columns: repeat(1, minmax(0, 1fr));
+            grid-template-rows: repeat(7, minmax(0, 1fr));
+            gap: 3px;
+        }
+        @media (min-width: 640px) { .colon-container { gap: 5px; } }
+        @media (min-width: 1024px) { .colon-container { gap: 7px; } }
+
+        /* Textura de filtro de vídeo/scanlines retro */
+        .scanlines {
+            background: linear-gradient(
+                rgba(18, 16, 16, 0) 50%, 
+                rgba(0, 0, 0, 0.4) 50%
+            );
+            background-size: 100% 4px;
+            pointer-events: none;
+        }
+    </style>
+</head>
+<body class="min-h-screen flex flex-col justify-between items-center p-3 sm:p-6 lg:p-8 theme-green">
+
+    <!-- Cabeçalho do Aplicativo -->
+    <header class="w-full max-w-5xl flex justify-between items-center border-b border-white/10 pb-3 mb-2">
+        <div class="flex items-center space-x-2">
+            <div class="w-3 h-3 rounded-full bg-emerald-500 animate-pulse"></div>
+            <h1 class="text-xs sm:text-sm font-mono tracking-widest text-slate-400 uppercase">Matriz LED 5x7 System</h1>
+        </div>
+        <button onclick="toggleFullscreen()" title="Alternar Tela Cheia" class="p-1.5 rounded-lg bg-slate-900 hover:bg-slate-800 border border-slate-700 text-slate-300 text-xs font-mono transition-colors flex items-center gap-1.5">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 8V4m0 0h4M4 4l5 5m11-5h-4m4 0v4m0-4l-5 5M4 16v4m0 0h4m-4 0l5-5m11 5l-5-5m5 5v-4m0 4h-4"></path></svg>
+            <span class="hidden sm:inline"> </span>
+        </button>
+    </header>
+
+    <!-- Área Central: Mostrador do Relógio LED -->
+    <main class="w-full max-w-6xl flex flex-col items-center justify-center my-auto py-4">
+        <!-- Moldura externa do painel -->
+        <div class="relative led-panel p-4 sm:p-8 lg:p-12 rounded-3xl w-full flex justify-center items-center overflow-hidden">
+            <!-- Camada de Scanlines de tubo CRT -->
+            <div class="absolute inset-0 scanlines opacity-30 z-10"></div>
+
+            <!-- Display de Dígitos -->
+            <div id="clock-display" class="relative z-0 flex items-center justify-center gap-2 sm:gap-4 lg:gap-7 w-full max-w-5xl">
+                <!-- Horas (Dígito 1) -->
+                <div class="digit-grid w-10 sm:w-16 md:w-24 lg:w-28" id="h1"></div>
+                <!-- Horas (Dígito 2) -->
+                <div class="digit-grid w-10 sm:w-16 md:w-24 lg:w-28" id="h2"></div>
+
+                <!-- Separador de Dois Pontos (Horas : Minutos) -->
+                <div class="colon-container w-2 sm:w-3.5 md:w-5 lg:w-6" id="colon1"></div>
+
+                <!-- Minutos (Dígito 1) -->
+                <div class="digit-grid w-10 sm:w-16 md:w-24 lg:w-28" id="m1"></div>
+                <!-- Minutos (Dígito 2) -->
+                <div class="digit-grid w-10 sm:w-16 md:w-24 lg:w-28" id="m2"></div>
+
+                <!-- Grupo de Segundos (Opcional via Toggle) -->
+                <div class="seconds-group hidden flex items-center gap-2 sm:gap-4 lg:gap-7">
+                    <!-- Separador de Dois Pontos (Minutos : Segundos) -->
+                    <div class="colon-container w-2 sm:w-3.5 md:w-5 lg:w-6" id="colon2"></div>
+                    <!-- Segundos (Dígito 1) -->
+                    <div class="digit-grid w-8 sm:w-14 md:w-20 lg:w-24" id="s1"></div>
+                    <!-- Segundos (Dígito 2) -->
+                    <div class="digit-grid w-8 sm:w-14 md:w-20 lg:w-24" id="s2"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Exibição de Data e Dia da Semana -->
+        <div class="w-full flex justify-between items-center mt-5 px-2">
+            <span id="ampm-display" class="digital-font digital-text text-xl sm:text-2xl font-bold tracking-widest hidden">
+                --
+            </span>
+            <div id="date-display" class="digital-font digital-text text-xl sm:text-3xl md:text-4xl font-bold tracking-wider ml-auto text-right uppercase">
+                --
+            </div>
+        </div>
+    </main>
+
+    <!-- Barra Inferior de Controles -->
+    <footer class="w-full max-w-4xl bg-slate-950/90 backdrop-blur-md border border-white/10 rounded-2xl p-4 mt-4">
+        <div class="flex flex-wrap items-center justify-between gap-4">
+            
+            <!-- Seletor de Cores de LED -->
+            <div class="flex items-center space-x-2.5">
+                <span class="text-xs font-mono uppercase text-slate-400 mr-1">Cor do LED:</span>
+                <button onclick="setTheme('theme-green')" title="Verde Fluorescente" 
+                        class="w-7 h-7 rounded-full bg-emerald-500 border-2 border-emerald-300 focus:outline-none hover:scale-110 active:scale-95 transition-transform"></button>
+                <button onclick="setTheme('theme-amber')" title="Âmbar Vintage" 
+                        class="w-7 h-7 rounded-full bg-amber-500 border-2 border-amber-300 focus:outline-none hover:scale-110 active:scale-95 transition-transform"></button>
+                <button onclick="setTheme('theme-cyan')" title="Azul Neon" 
+                        class="w-7 h-7 rounded-full bg-cyan-400 border-2 border-cyan-200 focus:outline-none hover:scale-110 active:scale-95 transition-transform"></button>
+                <button onclick="setTheme('theme-red')" title="Vermelho Digital" 
+                        class="w-7 h-7 rounded-full bg-red-600 border-2 border-red-300 focus:outline-none hover:scale-110 active:scale-95 transition-transform"></button>
+                <!-- Botão de Cor Branca Corrigido -->
+                <button onclick="setTheme('theme-white')" title="Branco Cristal" 
+                        class="w-7 h-7 rounded-full bg-white border-2 border-gray-300 focus:outline-none hover:scale-110 active:scale-95 transition-transform"></button>
+            </div>
+
+            <!-- Opções do Relógio (Formatos e Segundos) -->
+            <div class="flex flex-wrap items-center gap-2.5 text-xs sm:text-sm font-mono">
+                <!-- Botão Toggle de Segundos -->
+                <button id="toggle-seconds" onclick="toggleSeconds()" 
+                        class="px-3.5 py-1.5 rounded-xl bg-slate-900 hover:bg-slate-800 border border-slate-700 text-slate-300 transition-all active:scale-95">
+                    Segundos: <span id="seconds-status" class="font-bold text-emerald-400">OFF</span>
+                </button>
+
+                <!-- Botão Toggle 12h / 24h -->
+                <button id="toggle-format" onclick="toggleFormat()" 
+                        class="px-3.5 py-1.5 rounded-xl bg-slate-900 hover:bg-slate-800 border border-slate-700 text-slate-300 transition-all active:scale-95">
+                    Formato: <span id="format-status" class="font-bold text-emerald-400">24H</span>
+                </button>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Lógica de Funcionamento do Relógio LED em JavaScript -->
+    <script>
+        /**
+         * MATRIZES DE DÍGITOS 5x7 (0-9)
+         * Cada número é mapeado em 7 linhas por 5 colunas.
+         * 1 = LED Aceso, 0 = LED Apagado
+         */
+        const DIGIT_PATTERNS = {
+            '0': [
+                [0,1,1,1,0],
+                [1,0,0,0,1],
+                [1,0,0,0,1],
+                [1,0,0,0,1],
+                [1,0,0,0,1],
+                [1,0,0,0,1],
+                [0,1,1,1,0]
+            ],
+            '1': [
+                [0,0,1,0,0],
+                [0,1,1,0,0],
+                [0,0,1,0,0],
+                [0,0,1,0,0],
+                [0,0,1,0,0],
+                [0,0,1,0,0],
+                [0,1,1,1,0]
+            ],
+            '2': [
+                [0,1,1,1,0],
+                [1,0,0,0,1],
+                [0,0,0,0,1],
+                [0,0,1,1,0],
+                [0,1,0,0,0],
+                [1,0,0,0,0],
+                [1,1,1,1,1]
+            ],
+            '3': [
+                [0,1,1,1,0],
+                [1,0,0,0,1],
+                [0,0,0,0,1],
+                [0,0,1,1,0],
+                [0,0,0,0,1],
+                [1,0,0,0,1],
+                [0,1,1,1,0]
+            ],
+            '4': [
+                [0,0,0,1,0],
+                [0,0,1,1,0],
+                [0,1,0,1,0],
+                [1,0,0,1,0],
+                [1,1,1,1,1],
+                [0,0,0,1,0],
+                [0,0,0,1,0]
+            ],
+            '5': [
+                [1,1,1,1,1],
+                [1,0,0,0,0],
+                [1,1,1,1,0],
+                [0,0,0,0,1],
+                [0,0,0,0,1],
+                [1,0,0,0,1],
+                [0,1,1,1,0]
+            ],
+            '6': [
+                [0,1,1,1,0],
+                [1,0,0,0,0],
+                [1,0,0,0,0],
+                [1,1,1,1,0],
+                [1,0,0,0,1],
+                [1,0,0,0,1],
+                [0,1,1,1,0]
+            ],
+            '7': [
+                [1,1,1,1,1],
+                [0,0,0,0,1],
+                [0,0,0,1,0],
+                [0,0,1,0,0],
+                [0,1,0,0,0],
+                [0,1,0,0,0],
+                [0,1,0,0,0]
+            ],
+            '8': [
+                [0,1,1,1,0],
+                [1,0,0,0,1],
+                [1,0,0,0,1],
+                [0,1,1,1,0],
+                [1,0,0,0,1],
+                [1,0,0,0,1],
+                [0,1,1,1,0]
+            ],
+            '9': [
+                [0,1,1,1,0],
+                [1,0,0,0,1],
+                [1,0,0,0,1],
+                [0,1,1,1,1],
+                [0,0,0,0,1],
+                [0,0,0,0,1],
+                [0,1,1,1,0]
+            ]
+        };
+
+        /**
+         * CORREÇÃO DA MATRIZ DOS 2 PONTOS (:)
+         * Padrão vertical clássico de relógio com dois pontos acesos (linhas de índice 1 e 5 ou 2 e 4)
+         */
+        const COLON_PATTERN = [
+            [0],
+            [0],
+            [1], // Ponto superior
+            [0],
+            [1], // Ponto inferior
+            [0],
+            [0]
+        ];
+
+        // Estado do aplicativo (com carregamento do localStorage)
+        let currentTheme = localStorage.getItem('led_theme') || 'theme-green';
+        let is24HourFormat = localStorage.getItem('led_format') !== '12h';
+        let showSeconds = localStorage.getItem('led_seconds') === 'true';
+
+        // Cache dos estados anteriores para evitar reflows e otimizar renderização
+        const previousStates = {
+            h1: '', h2: '',
+            m1: '', m2: '',
+            s1: '', s2: '',
+            c1: null, c2: null,
+            dateStr: ''
+        };
+
+        // Elementos DOM dos dígitos
+        const digitContainers = {
+            h1: document.getElementById('h1'),
+            h2: document.getElementById('h2'),
+            m1: document.getElementById('m1'),
+            m2: document.getElementById('m2'),
+            s1: document.getElementById('s1'),
+            s2: document.getElementById('s2')
+        };
+
+        // Elementos DOM dos dois pontos
+        const colonContainers = {
+            c1: document.getElementById('colon1'),
+            c2: document.getElementById('colon2')
+        };
+
+        /**
+         * Constrói a grade inicial de elementos DIV para os LEDs
+         */
+        function initializeGrids() {
+            // Inicializa dígitos 5x7 (35 LEDs por dígito)
+            Object.keys(digitContainers).forEach(key => {
+                const container = digitContainers[key];
+                container.innerHTML = '';
+                const fragment = document.createDocumentFragment();
+                for (let i = 0; i < 35; i++) {
+                    const led = document.createElement('div');
+                    led.className = 'led-dot led-off';
+                    fragment.appendChild(led);
+                }
+                container.appendChild(fragment);
+            });
+
+            // Inicializa separadores 1x7 (7 LEDs por separador)
+            Object.keys(colonContainers).forEach(key => {
+                const container = colonContainers[key];
+                container.innerHTML = '';
+                const fragment = document.createDocumentFragment();
+                for (let i = 0; i < 7; i++) {
+                    const led = document.createElement('div');
+                    led.className = 'led-dot led-off';
+                    fragment.appendChild(led);
+                }
+                container.appendChild(fragment);
+            });
+        }
+
+        /**
+         * Renderiza um dígito numérico otimizado (apenas se houver alteração)
+         */
+        function renderDigit(container, charDigit, key) {
+            if (previousStates[key] === charDigit) return; // Evita re-renderização desnecessária
+            previousStates[key] = charDigit;
+
+            const pattern = DIGIT_PATTERNS[charDigit] || DIGIT_PATTERNS['0'];
+            const leds = container.children;
+
+            let index = 0;
+            for (let r = 0; r < 7; r++) {
+                for (let c = 0; c < 5; c++) {
+                    const isOn = pattern[r][c] === 1;
+                    const led = leds[index];
+                    if (isOn) {
+                        led.classList.replace('led-off', 'led-on');
+                    } else {
+                        led.classList.replace('led-on', 'led-off');
+                    }
+                    index++;
+                }
+            }
+        }
+
+        /**
+         * Renderiza os dois pontos (apenas se houver alteração)
+         */
+        function renderColon(container, isVisible, key) {
+            if (previousStates[key] === isVisible) return;
+            previousStates[key] = isVisible;
+
+            const leds = container.children;
+            let index = 0;
+            for (let r = 0; r < 7; r++) {
+                const isDot = COLON_PATTERN[r][0] === 1;
+                const led = leds[index];
+                if (isDot && isVisible) {
+                    led.classList.replace('led-off', 'led-on');
+                } else {
+                    led.classList.replace('led-on', 'led-off');
+                }
+                index++;
+            }
+        }
+
+        /**
+         * Loop principal de atualização do relógio
+         */
+        function updateClock() {
+            const now = new Date();
+            let hours = now.getHours();
+            const minutes = now.getMinutes();
+            const seconds = now.getSeconds();
+
+            // Formatação do indicador AM/PM para 12h
+            const ampmDisplay = document.getElementById('ampm-display');
+            if (!is24HourFormat) {
+                const isAm = hours < 12;
+                ampmDisplay.innerText = isAm ? 'AM' : 'PM';
+                ampmDisplay.classList.remove('hidden');
+                hours = hours % 12 || 12;
+            } else {
+                ampmDisplay.classList.add('hidden');
+            }
+
+            const hStr = String(hours).padStart(2, '0');
+            const mStr = String(minutes).padStart(2, '0');
+            const sStr = String(seconds).padStart(2, '0');
+
+            // Atualiza dígitos de Horas e Minutos
+            renderDigit(digitContainers.h1, hStr[0], 'h1');
+            renderDigit(digitContainers.h2, hStr[1], 'h2');
+            renderDigit(digitContainers.m1, mStr[0], 'm1');
+            renderDigit(digitContainers.m2, mStr[1], 'm2');
+
+            // Piscar dos 2 pontos sincronizado a 1Hz (aceso nos pares, apagado nos ímpares)
+            const isColonVisible = seconds % 2 === 0;
+            renderColon(colonContainers.c1, isColonVisible, 'c1');
+
+            // Atualiza Segundos se ativo
+            if (showSeconds) {
+                renderColon(colonContainers.c2, isColonVisible, 'c2');
+                renderDigit(digitContainers.s1, sStr[0], 's1');
+                renderDigit(digitContainers.s2, sStr[1], 's2');
+            }
+
+            // Atualiza a exibição de data quando muda
+            const dayOfWeek = now.toLocaleDateString('pt-BR', { weekday: 'long' });
+            const capitalizedDay = dayOfWeek.charAt(0).toUpperCase() + dayOfWeek.slice(1);
+            const fullDate = now.toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit', year: 'numeric' });
+            const dateText = `${capitalizedDay}, ${fullDate}`;
+
+            if (previousStates.dateStr !== dateText) {
+                document.getElementById('date-display').innerText = dateText;
+                previousStates.dateStr = dateText;
+            }
+
+            requestAnimationFrame(updateClock);
+        }
+
+        /**
+         * Alterna formato entre 12h e 24h
+         */
+        function toggleFormat() {
+            is24HourFormat = !is24HourFormat;
+            localStorage.setItem('led_format', is24HourFormat ? '24h' : '12h');
+            document.getElementById('format-status').innerText = is24HourFormat ? '24H' : '12H';
+            // Reseta cache para forçar atualização imediata
+            previousStates.h1 = ''; previousStates.h2 = '';
+        }
+
+        /**
+         * Alterna exibição de segundos
+         */
+        function toggleSeconds() {
+            showSeconds = !showSeconds;
+            localStorage.setItem('led_seconds', showSeconds ? 'true' : 'false');
+            applySecondsVisibility();
+        }
+
+        function applySecondsVisibility() {
+            const secGroup = document.querySelector('.seconds-group');
+            const statusLabel = document.getElementById('seconds-status');
+
+            if (showSeconds) {
+                secGroup.classList.remove('hidden');
+                secGroup.classList.add('flex');
+                statusLabel.innerText = 'ON';
+            } else {
+                secGroup.classList.add('hidden');
+                secGroup.classList.remove('flex');
+                statusLabel.innerText = 'OFF';
+            }
+            // Reseta cache dos segundos ao alternar
+            previousStates.s1 = ''; previousStates.s2 = ''; previousStates.c2 = null;
+        }
+
+        /**
+         * Altera o tema visual e salva preferência
+         */
+        function setTheme(themeName) {
+            currentTheme = themeName;
+            localStorage.setItem('led_theme', themeName);
+            document.body.className = `min-h-screen flex flex-col justify-between items-center p-3 sm:p-6 lg:p-8 ${themeName}`;
+        }
+
+        /**
+         * Alterna Modo Tela Cheia (Fullscreen)
+         */
+        function toggleFullscreen() {
+            if (!document.fullscreenElement) {
+                document.documentElement.requestFullscreen().catch(() => {});
+            } else {
+                if (document.exitFullscreen) {
+                    document.exitFullscreen();
+                }
+            }
+        }
+
+        // Carregamento e inicialização na abertura da página
+        window.onload = function () {
+            initializeGrids();
+            setTheme(currentTheme);
+            applySecondsVisibility();
+            document.getElementById('format-status').innerText = is24HourFormat ? '24H' : '12H';
+            requestAnimationFrame(updateClock);
+        };
+    </script>
+</body>
+</html>

@@ -1,0 +1,741 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bolão Lotofácil da Independência</title>
+    <style>
+        :root {
+            /* Paleta Banco do Brasil */
+            --bb-blue: #0038a8;
+            --bb-blue-dark: #002776;
+            --bb-yellow: #fcf800;
+            --bb-yellow-hover: #e5e100;
+            --bb-bg: #f4f6f9;
+            --bb-card: #ffffff;
+            --bb-text: #1a1a1a;
+            --bb-border: #dcdfe6;
+            --bb-green: #2e7d32;
+            --bb-danger: #d32f2f;
+        }
+
+        body {
+            font-family: 'Open Sans', 'Segoe UI', Arial, sans-serif;
+            background-color: var(--bb-bg);
+            color: var(--bb-text);
+            margin: 0;
+            padding: 15px;
+            display: flex;
+            justify-content: center;
+            overflow-x: hidden;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 600px;
+            background: var(--bb-card);
+            border-radius: 12px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+            overflow: hidden;
+            border: 1px solid var(--bb-border);
+            position: relative;
+            z-index: 10;
+        }
+
+        /* Topo Estilo App BB */
+        header {
+            background-color: var(--bb-blue);
+            color: white;
+            padding: 20px 20px 15px 20px;
+            text-align: center;
+            border-bottom: 5px solid var(--bb-yellow);
+        }
+
+        h1 {
+            margin: 0 0 5px 0;
+            font-size: 22px;
+            font-weight: 700;
+            letter-spacing: 0.5px;
+        }
+
+        .subtitle {
+            font-size: 13px;
+            color: #d1e0ff;
+            font-weight: 400;
+        }
+
+        /* Bloco Chave PIX */
+        .pix-box {
+            background-color: #fffde6;
+            border: 1px dashed #d1c000;
+            border-radius: 8px;
+            padding: 10px 14px;
+            margin-bottom: 16px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 10px;
+        }
+
+        .pix-label {
+            font-size: 12px;
+            font-weight: bold;
+            color: #555;
+            text-transform: uppercase;
+        }
+
+        .pix-key {
+            font-size: 13px;
+            font-weight: bold;
+            color: var(--bb-blue);
+            word-break: break-all;
+        }
+
+        .btn-copy {
+            background: var(--bb-blue);
+            color: white;
+            border: none;
+            padding: 6px 12px;
+            border-radius: 4px;
+            font-size: 11px;
+            font-weight: bold;
+            cursor: pointer;
+            white-space: nowrap;
+        }
+
+        .btn-copy:hover {
+            background: var(--bb-blue-dark);
+        }
+
+        .app-body {
+            padding: 20px;
+        }
+
+        /* Card de Resumo Financeiro */
+        .prize-card {
+            background: #f8fafd;
+            border: 1px solid #cce0ff;
+            border-left: 6px solid var(--bb-blue);
+            border-radius: 8px;
+            padding: 16px;
+            margin-bottom: 20px;
+        }
+
+        .prize-title {
+            font-size: 12px;
+            text-transform: uppercase;
+            color: #555;
+            font-weight: bold;
+            margin-bottom: 4px;
+        }
+
+        .prize-total {
+            font-size: 22px;
+            font-weight: 800;
+            color: var(--bb-blue);
+            margin-bottom: 12px;
+        }
+
+        .prize-share-box {
+            background: var(--bb-blue);
+            color: white;
+            padding: 12px;
+            border-radius: 6px;
+            text-align: center;
+            margin-bottom: 12px;
+        }
+
+        .prize-share-label {
+            font-size: 11px;
+            text-transform: uppercase;
+            color: var(--bb-yellow);
+            font-weight: bold;
+        }
+
+        .prize-share-value {
+            font-size: 22px;
+            font-weight: 800;
+        }
+
+        /* Stats */
+        .stats-row {
+            display: flex;
+            justify-content: space-between;
+            background: #fff;
+            padding: 10px 12px;
+            border-radius: 6px;
+            border: 1px solid var(--bb-border);
+            font-size: 13px;
+            font-weight: 600;
+        }
+
+        .stat-item {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .stat-value-green {
+            color: var(--bb-green);
+            font-weight: bold;
+        }
+
+        /* Formulário Novo Apostador */
+        .add-form {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 20px;
+        }
+
+        .add-form input[type="text"] {
+            flex: 1;
+            padding: 12px;
+            border: 1px solid var(--bb-border);
+            border-radius: 6px;
+            font-size: 14px;
+            outline: none;
+            transition: border-color 0.2s;
+        }
+
+        .add-form input[type="text"]:focus {
+            border-color: var(--bb-blue);
+        }
+
+        .add-form button {
+            background-color: var(--bb-yellow);
+            color: var(--bb-blue-dark);
+            border: none;
+            padding: 12px 18px;
+            border-radius: 6px;
+            font-weight: bold;
+            font-size: 14px;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+
+        .add-form button:hover {
+            background-color: var(--bb-yellow-hover);
+        }
+
+        /* Lista de Participantes */
+        .participant-list {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+
+        .participant-item {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 12px;
+            border-bottom: 1px solid #eef2f7;
+            transition: background 0.15s;
+        }
+
+        .participant-item:hover {
+            background-color: #f0f4fc;
+        }
+
+        .participant-info {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            font-size: 15px;
+        }
+
+        .number {
+            font-weight: bold;
+            color: var(--bb-blue);
+            background: #eef3ff;
+            padding: 2px 8px;
+            border-radius: 4px;
+            font-size: 13px;
+            min-width: 24px;
+            text-align: center;
+        }
+
+        .name-link {
+            font-weight: 600;
+            color: var(--bb-blue);
+            text-decoration: none;
+            cursor: pointer;
+        }
+
+        .name-link:hover {
+            text-decoration: underline;
+        }
+
+        .status-checkbox {
+            width: 22px;
+            height: 22px;
+            pointer-events: none;
+            accent-color: var(--bb-blue);
+        }
+
+        /* Modal / Popup */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            display: none;
+            justify-content: center;
+            align-items: center;
+            z-index: 2000;
+        }
+
+        .modal-content {
+            background: white;
+            padding: 24px;
+            border-radius: 12px;
+            width: 90%;
+            max-width: 400px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.2);
+            border-top: 5px solid var(--bb-blue);
+        }
+
+        .modal-header {
+            font-size: 18px;
+            font-weight: bold;
+            color: var(--bb-blue);
+            margin-bottom: 15px;
+        }
+
+        .modal-body input[type="password"] {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid var(--bb-border);
+            border-radius: 6px;
+            box-sizing: border-box;
+            margin-bottom: 15px;
+            font-size: 14px;
+        }
+
+        .modal-actions {
+            display: flex;
+            gap: 10px;
+            justify-content: flex-end;
+        }
+
+        .btn {
+            padding: 10px 16px;
+            border: none;
+            border-radius: 6px;
+            font-weight: bold;
+            cursor: pointer;
+            font-size: 14px;
+        }
+
+        .btn-primary {
+            background-color: var(--bb-blue);
+            color: white;
+        }
+
+        .btn-secondary {
+            background-color: #e0e0e0;
+            color: #333;
+        }
+
+        .btn-danger {
+            background-color: var(--bb-danger);
+            color: white;
+        }
+
+        .edit-status-container {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin: 15px 0;
+            background: #f4f6f9;
+            padding: 12px;
+            border-radius: 6px;
+        }
+
+        /* BADGE FLUTUANTE / BRILHANTE QUE QUICA */
+        #bouncing-badge {
+            position: fixed;
+            top: 50px;
+            left: 50px;
+            width: 95px;
+            height: 95px;
+            border-radius: 50%;
+            background: radial-gradient(circle at 30% 30%, #fff7a1, #ffd700 40%, #d4af37 70%, #8a6d1c 100%);
+            box-shadow: 0 0 15px rgba(255, 215, 0, 0.8), 0 5px 15px rgba(0, 0, 0, 0.3);
+            border: 2px solid #fff;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            z-index: 999;
+            pointer-events: none;
+            opacity: 0.92;
+            animation: spin3d 4s linear infinite;
+        }
+
+        .badge-text {
+            color: #4a3300;
+            font-weight: 900;
+            font-size: 11px;
+            text-transform: uppercase;
+            line-height: 1.15;
+            text-shadow: 0px 1px 1px rgba(255, 255, 255, 0.8);
+            padding: 6px;
+        }
+
+        @keyframes spin3d {
+            0% { transform: rotateY(0deg) rotateX(0deg); }
+            50% { transform: rotateY(180deg) rotateX(15deg); }
+            100% { transform: rotateY(360deg) rotateX(0deg); }
+        }
+    </style>
+</head>
+<body>
+
+<!-- BADGE ANIMADO FLUTUANTE -->
+<div id="bouncing-badge">
+    <div class="badge-text">Milionário<br>serei<br>em breve</div>
+</div>
+
+<div class="container">
+    <header>
+        <h1>Lotofácil da Independência</h1>
+        <div class="subtitle">Sorteio: 15/09 | Valor da Cota: R$ 50,00</div>
+    </header>
+
+    <div class="app-body">
+        <!-- Bloco Chave PIX -->
+        <div class="pix-box">
+            <div>
+                <div class="pix-label">Chave PIX (E-mail):</div>
+                <div class="pix-key" id="pix-key-text">andretbonfim@gmail.com</div>
+            </div>
+            <button class="btn-copy" onclick="copyPix()">Copiar PIX</button>
+        </div>
+
+        <!-- Card Resumo Financeiro -->
+        <div class="prize-card">
+            <div class="prize-title">Prêmio Estimado</div>
+            <div class="prize-total">R$ 300 milhões !!!</div>
+            
+            <div class="prize-share-box">
+                <div class="prize-share-label">Valor Individual por Apostador</div>
+                <div class="prize-share-value" id="prize-per-person">R$ 0,00</div>
+            </div>
+
+            <div class="stats-row">
+                <div class="stat-item" id="total-participants-count">Apostadores: 0</div>
+                <div class="stat-item">Total Pago: <span class="stat-value-green" id="total-paid-value">R$ 0,00</span></div>
+            </div>
+        </div>
+
+        <!-- Formulário para adicionar novos nomes -->
+        <form class="add-form" id="participant-form">
+            <input type="text" id="new-name" placeholder="Nome do novo apostador..." required>
+            <button type="submit">Incluir</button>
+        </form>
+
+        <!-- Lista de Apostadores -->
+        <ul class="participant-list" id="participants-list">
+            <!-- Inseridos dinamicamente -->
+        </ul>
+    </div>
+</div>
+
+<!-- Modal Autenticação -->
+<div class="modal-overlay" id="auth-modal">
+    <div class="modal-content">
+        <div class="modal-header">Acesso de Administrador</div>
+        <div class="modal-body">
+            <p style="font-size: 14px; color: #666; margin-top: 0;">Digite a senha para alterar ou excluir o apostador:</p>
+            <input type="password" id="admin-password" placeholder="Digite a senha..." autofocus>
+        </div>
+        <div class="modal-actions">
+            <button class="btn btn-secondary" onclick="closeAuthModal()">Cancelar</button>
+            <button class="btn btn-primary" onclick="verifyPassword()">Confirmar</button>
+        </div>
+    </div>
+</div>
+
+<!-- Modal Edição / Exclusão -->
+<div class="modal-overlay" id="edit-modal">
+    <div class="modal-content">
+        <div class="modal-header" id="edit-modal-title">Editar Apostador</div>
+        <div class="modal-body">
+            <div class="edit-status-container">
+                <input type="checkbox" id="edit-paid-checkbox" style="width:20px; height:20px; cursor:pointer;">
+                <label for="edit-paid-checkbox" style="cursor:pointer; font-weight: bold; font-size:14px;">Marcar como PAGO (R$ 50,00)</label>
+            </div>
+        </div>
+        <div class="modal-actions" style="justify-content: space-between;">
+            <button class="btn btn-danger" onclick="deleteCurrentParticipant()">Excluir</button>
+            <div style="display: flex; gap: 8px;">
+                <button class="btn btn-secondary" onclick="closeEditModal()">Cancelar</button>
+                <button class="btn btn-primary" onclick="saveEditParticipant()">Salvar</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    const TOTAL_PRIZE = 300000000;
+    const COTA_VALOR = 50.00;
+    const ADMIN_PASS = "123";
+
+    // Lista inicial
+    const initialParticipants = [
+        { name: "Andre Bonfim", paid: true },
+        { name: "Andre Bonfim", paid: true },
+        { name: "Carlinhos", paid: true },
+        { name: "Simone", paid: true },
+        { name: "Gisele", paid: true },
+        { name: "Gisele", paid: true },
+        { name: "Fabiane", paid: true },
+        { name: "Helbert", paid: true },
+        { name: "Katia", paid: true },
+        { name: "Kátia", paid: true },
+        { name: "Celso", paid: true },
+        { name: "Fabio", paid: true },
+        { name: "Daniel", paid: true },
+        { name: "Ramon", paid: true },
+        { name: "Aline", paid: true },
+        { name: "Karem", paid: true },
+        { name: "Jacqueline", paid: true },
+        { name: "Debora Regina", paid: true },
+        { name: "Edeiles", paid: false },
+        { name: "Bruno Zé", paid: true },
+        { name: "Igoor", paid: true },
+        { name: "Leo", paid: true },
+        { name: "Guilherme", paid: true },
+        { name: "Nelton", paid: true },
+        { name: "Eli", paid: true },
+        { name: "Alan", paid: true },
+        { name: "Flavia Rejane", paid: true },
+        { name: "Marcela", paid: true },
+        { name: "Elisana", paid: true },
+        { name: "Leandro", paid: true },
+        { name: "Jader Andrade", paid: false },
+        { name: "Zé Geraldo", paid: true },
+        { name: "Sérgio Faria", paid: false },
+        { name: "Marcia Cristina", paid: true },
+        { name: "Alisson Torres", paid: true },
+        { name: "Omar", paid: true },
+        { name: "Tatiana", paid: true },
+        { name: "Denise", paid: true },
+        { name: "Viviane Lopes", paid: true },
+        { name: "Orlando", paid: true },
+        { name: "Vania", paid: true },
+        { name: "Cleo", paid: true },
+        { name: "Edilene (Zé Geraldo)", paid: true },
+        { name: "Daniela", paid: false },
+        { name: "Marcelo", paid: true },
+        { name: "Luciano", paid: true },
+        { name: "Fred", paid: false },
+        { name: "Daniel", paid: true },
+        { name: "Bruno Zanelato", paid: true },
+        { name: "Ana Paula", paid: false },
+        { name: "Janice", paid: true },
+        { name: "Elber Cvo", paid: true },
+        { name: "Gustavo", paid: true },
+        { name: "Alex", paid: false },
+        { name: "Alex", paid: false },
+        { name: "Allexander", paid: false },
+        { name: "Flaviana", paid: true },
+        { name: "Janine", paid: true },
+        { name: "Marcelo", paid: true },
+        { name: "Giordani Bruno", paid: true },
+        { name: "Gustavo 3 marias", paid: true },
+        { name: "Priscilla", paid: true }
+    ];
+
+    let participants = JSON.parse(localStorage.getItem('bolao_bb_participants')) || initialParticipants;
+    let selectedIndex = null;
+
+    // Elementos DOM
+    const listElement = document.getElementById('participants-list');
+    const prizeShareElement = document.getElementById('prize-per-person');
+    const totalParticipantsElement = document.getElementById('total-participants-count');
+    const totalPaidElement = document.getElementById('total-paid-value');
+    const formElement = document.getElementById('participant-form');
+    const nameInputElement = document.getElementById('new-name');
+
+    // Modais
+    const authModal = document.getElementById('auth-modal');
+    const editModal = document.getElementById('edit-modal');
+    const passwordInput = document.getElementById('admin-password');
+    const editPaidCheckbox = document.getElementById('edit-paid-checkbox');
+    const editModalTitle = document.getElementById('edit-modal-title');
+
+    function saveData() {
+        localStorage.setItem('bolao_bb_participants', JSON.stringify(participants));
+    }
+
+    function formatCurrency(value) {
+        return value.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+    }
+
+    function copyPix() {
+        const pixText = document.getElementById('pix-key-text').innerText;
+        navigator.clipboard.writeText(pixText).then(() => {
+            alert('Chave PIX copiada para a área de transferência!');
+        });
+    }
+
+    function updateCalculations() {
+        const totalCount = participants.length;
+        const paidCount = participants.filter(p => p.paid).length;
+        const totalPaidAmount = paidCount * COTA_VALOR;
+
+        totalParticipantsElement.textContent = `Apostadores: ${totalCount}`;
+        totalPaidElement.textContent = formatCurrency(totalPaidAmount);
+        
+        if (totalCount > 0) {
+            const share = TOTAL_PRIZE / totalCount;
+            prizeShareElement.textContent = formatCurrency(share);
+        } else {
+            prizeShareElement.textContent = formatCurrency(0);
+        }
+    }
+
+    function renderList() {
+        listElement.innerHTML = '';
+
+        participants.forEach((participant, index) => {
+            const li = document.createElement('li');
+            li.className = 'participant-item';
+
+            const numberFormatted = String(index + 1).padStart(2, '0');
+
+            li.innerHTML = `
+                <div class="participant-info">
+                    <span class="number">${numberFormatted}</span>
+                    <a class="name-link" onclick="openAuthModal(${index})">${participant.name}</a>
+                </div>
+                <div>
+                    <input type="checkbox" 
+                           class="status-checkbox" 
+                           ${participant.paid ? 'checked' : ''}>
+                </div>
+            `;
+
+            listElement.appendChild(li);
+        });
+
+        updateCalculations();
+    }
+
+    /* Modais */
+    function openAuthModal(index) {
+        selectedIndex = index;
+        passwordInput.value = '';
+        authModal.style.display = 'flex';
+        passwordInput.focus();
+    }
+
+    function closeAuthModal() {
+        authModal.style.display = 'none';
+        passwordInput.value = '';
+    }
+
+    function verifyPassword() {
+        if (passwordInput.value === ADMIN_PASS) {
+            closeAuthModal();
+            openEditModal();
+        } else {
+            alert('Senha incorreta!');
+            passwordInput.value = '';
+            passwordInput.focus();
+        }
+    }
+
+    passwordInput.addEventListener('keypress', function (e) {
+        if (e.key === 'Enter') {
+            verifyPassword();
+        }
+    });
+
+    function openEditModal() {
+        const participant = participants[selectedIndex];
+        editModalTitle.textContent = `${selectedIndex + 1}. ${participant.name}`;
+        editPaidCheckbox.checked = participant.paid;
+        editModal.style.display = 'flex';
+    }
+
+    function closeEditModal() {
+        editModal.style.display = 'none';
+        selectedIndex = null;
+    }
+
+    function saveEditParticipant() {
+        if (selectedIndex !== null) {
+            participants[selectedIndex].paid = editPaidCheckbox.checked;
+            saveData();
+            renderList();
+            closeEditModal();
+        }
+    }
+
+    function deleteCurrentParticipant() {
+        if (selectedIndex !== null) {
+            if (confirm(`Tem certeza que deseja excluir "${participants[selectedIndex].name}" da lista?`)) {
+                participants.splice(selectedIndex, 1);
+                saveData();
+                renderList();
+                closeEditModal();
+            }
+        }
+    }
+
+    // Adicionar novo apostador
+    formElement.addEventListener('submit', (e) => {
+        e.preventDefault();
+        const newName = nameInputElement.value.trim();
+        
+        if (newName !== '') {
+            participants.push({ name: newName, paid: false });
+            saveData();
+            renderList();
+            nameInputElement.value = '';
+            
+            window.scrollTo({ top: document.body.scrollHeight, behavior: 'smooth' });
+        }
+    });
+
+    // ANIMAÇÃO DO BADGE QUICANDO (DVD EFFECT)
+    const badge = document.getElementById('bouncing-badge');
+    let x = Math.random() * (window.innerWidth - 100);
+    let y = Math.random() * (window.innerHeight - 100);
+    let dx = 2;
+    let dy = 2;
+
+    function animateBadge() {
+        const badgeWidth = badge.offsetWidth;
+        const badgeHeight = badge.offsetHeight;
+        const screenWidth = window.innerWidth;
+        const screenHeight = window.innerHeight;
+
+        if (x + badgeWidth >= screenWidth || x <= 0) {
+            dx = -dx;
+        }
+        if (y + badgeHeight >= screenHeight || y <= 0) {
+            dy = -dy;
+        }
+
+        x += dx;
+        y += dy;
+
+        badge.style.left = x + 'px';
+        badge.style.top = y + 'px';
+
+        requestAnimationFrame(animateBadge);
+    }
+
+    // Inicialização
+    renderList();
+    animateBadge();
+</script>
+
+</body>
+</html>
