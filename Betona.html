@@ -1,0 +1,1524 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+  <title>BET do Patinho</title>
+  <style>
+    :root {
+      --bg-dark: #0a0c16;
+      --card-bg: #151828;
+      --accent-gold: #ffcc00;
+      --accent-blue: #0038a8;
+      --accent-green: #10b981;
+      --accent-purple: #8b5cf6;
+      --text-main: #f3f4f6;
+      --text-muted: #9ca3af;
+      --border-color: #272a3e;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    html, body {
+      width: 100%;
+      height: 100%;
+      height: 100dvh;
+      overflow: hidden;
+      background: radial-gradient(circle at center, #1a1e36 0%, var(--bg-dark) 100%);
+      color: var(--text-main);
+    }
+
+    body {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+    }
+
+    #celebrationCanvas {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100vw;
+      height: 100vh;
+      pointer-events: none;
+      z-index: 9999;
+    }
+
+    .container {
+      background: var(--card-bg);
+      width: 100%;
+      height: 100%;
+      height: 100dvh;
+      padding: 14px 18px;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      position: relative;
+      z-index: 10;
+      box-shadow: 0 0 30px rgba(0, 0, 0, 0.8);
+    }
+
+    .shake {
+      animation: shake 0.5s cubic-bezier(.36,.07,.19,.97) both;
+    }
+
+    @keyframes shake {
+      10%, 90% { transform: translate3d(-2px, 0, 0); }
+      20%, 80% { transform: translate3d(4px, 0, 0); }
+      30%, 50%, 70% { transform: translate3d(-8px, 0, 0); }
+      40%, 60% { transform: translate3d(8px, 0, 0); }
+    }
+
+    /* Cabeçalho */
+    .title-box {
+      background: rgba(0, 0, 0, 0.4);
+      border: 2px solid var(--accent-gold);
+      border-radius: 16px;
+      padding: 6px 12px;
+      text-align: center;
+      box-shadow: 0 4px 15px rgba(255, 204, 0, 0.15);
+    }
+
+    .title-box h1 {
+      color: var(--accent-gold);
+      font-size: 1.3rem;
+      font-weight: 900;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+    }
+
+    .title-box .subtitle {
+      color: var(--text-muted);
+      font-size: 0.75rem;
+      font-style: italic;
+    }
+
+    /* Exibição Financeira */
+    .financial-display {
+      display: flex;
+      justify-content: space-around;
+      gap: 10px;
+      margin-top: 6px;
+    }
+
+    .fin-card {
+      flex: 1;
+      background: rgba(255, 255, 255, 0.04);
+      border: 1px solid var(--border-color);
+      border-radius: 10px;
+      padding: 4px;
+      text-align: center;
+    }
+
+    .fin-label {
+      font-size: 0.65rem;
+      color: var(--text-muted);
+      text-transform: uppercase;
+    }
+
+    .fin-value {
+      font-size: 0.95rem;
+      font-weight: 800;
+    }
+
+    .fin-bet { color: var(--accent-green); }
+    .fin-prize { color: var(--accent-gold); }
+
+    /* Jogador */
+    .player-section {
+      margin-top: 6px;
+      display: flex;
+      gap: 6px;
+    }
+
+    .player-input {
+      flex: 1;
+      background: #090a10;
+      border: 1px solid var(--border-color);
+      border-radius: 8px;
+      padding: 6px 10px;
+      color: #fff;
+      font-size: 0.85rem;
+      text-align: center;
+    }
+
+    .spins-alert {
+      text-align: center;
+      background: rgba(0, 56, 168, 0.2);
+      border: 1px solid var(--accent-blue);
+      border-radius: 10px;
+      padding: 4px;
+      font-size: 0.8rem;
+      font-weight: 700;
+      color: #60a5fa;
+      margin-top: 6px;
+    }
+
+    /* Mascote */
+    .duck-container {
+      position: relative;
+      width: 100%;
+      height: 34px;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      overflow: hidden;
+      margin: 2px 0;
+    }
+
+    #duckMascot {
+      font-size: 1.8rem;
+      position: absolute;
+      transition: transform 0.1s linear;
+      user-select: none;
+    }
+
+    .duck-idle {
+      animation: duckWaddle 3.5s infinite ease-in-out alternate;
+    }
+
+    @keyframes duckWaddle {
+      0% { transform: translateX(-100px) scaleX(1); }
+      49% { transform: translateX(100px) scaleX(1); }
+      50% { transform: translateX(100px) scaleX(-1); }
+      100% { transform: translateX(-100px) scaleX(-1); }
+    }
+
+    .duck-crazy {
+      animation: duckCrazyAnim 0.3s infinite linear !important;
+      font-size: 3.5rem !important;
+      z-index: 10000;
+      position: fixed !important;
+    }
+
+    @keyframes duckCrazyAnim {
+      0% { top: 10%; left: 10%; transform: rotate(0deg) scale(1.2); }
+      25% { top: 70%; left: 80%; transform: rotate(90deg) scale(1.8); }
+      50% { top: 80%; left: 20%; transform: rotate(180deg) scale(1.4); }
+      75% { top: 20%; left: 70%; transform: rotate(270deg) scale(2); }
+      100% { top: 10%; left: 10%; transform: rotate(360deg) scale(1.2); }
+    }
+
+    /* Faixa Marquee em Movimento */
+    .marquee-container {
+      width: 100%;
+      background: #000;
+      border: 1px solid var(--accent-gold);
+      border-radius: 6px;
+      overflow: hidden;
+      white-space: nowrap;
+      box-shadow: 0 0 10px rgba(255, 204, 0, 0.2);
+      margin-bottom: 6px;
+    }
+
+    .marquee-text {
+      display: inline-block;
+      padding-left: 100%;
+      animation: marquee 12s linear infinite;
+      font-size: 0.8rem;
+      font-weight: 800;
+      color: var(--accent-gold);
+      text-transform: uppercase;
+      letter-spacing: 1px;
+    }
+
+    @keyframes marquee {
+      0% { transform: translate(0, 0); }
+      100% { transform: translate(-100%, 0); }
+    }
+
+    .slot-machine {
+      display: flex;
+      justify-content: space-between;
+      gap: 8px;
+      background: #06070c;
+      padding: 8px;
+      border-radius: 18px;
+      border: 1px solid var(--border-color);
+      align-items: center;
+    }
+
+    .reel {
+      flex: 1;
+      height: 105px;
+      background: #ffffff;
+      border-radius: 12px;
+      border: 3px solid var(--accent-blue);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 2.8rem;
+      box-shadow: inset 0 0 15px rgba(0,0,0,0.3);
+      overflow: hidden;
+      user-select: none;
+    }
+
+    .reel img {
+      width: 75%;
+      height: 75%;
+      object-fit: cover;
+      border-radius: 8px;
+    }
+
+    .spinning {
+      animation: reelBlur 0.08s infinite linear;
+    }
+
+    @keyframes reelBlur {
+      0% { transform: translateY(-8px); filter: blur(2px); }
+      50% { transform: translateY(8px); filter: blur(4px); }
+      100% { transform: translateY(-8px); filter: blur(2px); }
+    }
+
+    .btn-spin {
+      background: linear-gradient(180deg, #ffdd33, #ffcc00);
+      color: #000;
+      border: none;
+      padding: 12px;
+      font-size: 1.2rem;
+      font-weight: 900;
+      border-radius: 50px;
+      cursor: pointer;
+      box-shadow: 0 6px 0 #b38f00, 0 10px 20px rgba(0,0,0,0.4);
+      transition: all 0.1s ease;
+      text-transform: uppercase;
+      width: 100%;
+    }
+
+    .btn-spin:active {
+      transform: translateY(4px);
+      box-shadow: 0 2px 0 #b38f00, 0 5px 10px rgba(0,0,0,0.3);
+    }
+
+    .btn-spin:disabled {
+      background: #4b5563;
+      box-shadow: 0 6px 0 #374151;
+      color: #9ca3af;
+      cursor: not-allowed;
+    }
+
+    .message {
+      font-size: 0.9rem;
+      font-weight: 800;
+      min-height: 36px;
+      color: var(--accent-gold);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      padding: 0 6px;
+    }
+
+    .win-jackpot {
+      color: var(--accent-gold);
+      font-size: 1.05rem;
+      animation: pulse 0.5s infinite alternate;
+    }
+
+    @keyframes pulse {
+      from { transform: scale(1); }
+      to { transform: scale(1.05); }
+    }
+
+    /* Rodapé */
+    .footer-stats {
+      padding-top: 6px;
+      border-top: 1px solid var(--border-color);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .footer-left, .footer-right {
+      display: flex;
+      gap: 8px;
+      align-items: center;
+    }
+
+    .btn-icon {
+      background: rgba(255, 255, 255, 0.08);
+      border: 1px solid var(--border-color);
+      color: var(--text-main);
+      border-radius: 50%;
+      width: 36px;
+      height: 36px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1rem;
+      transition: all 0.2s;
+    }
+
+    .stat-item {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      font-size: 0.65rem;
+      color: var(--text-muted);
+    }
+
+    .stat-value {
+      font-size: 0.9rem;
+      font-weight: 800;
+      color: var(--accent-gold);
+    }
+
+    /* Modais */
+    .modal-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100vw;
+      height: 100vh;
+      background: rgba(0, 0, 0, 0.85);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 1000;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.3s ease;
+      padding: 16px;
+    }
+
+    .modal-overlay.active {
+      opacity: 1;
+      pointer-events: auto;
+    }
+
+    .modal-content {
+      background: var(--card-bg);
+      border: 1px solid var(--border-color);
+      border-radius: 16px;
+      padding: 16px;
+      width: 100%;
+      max-width: 420px;
+      max-height: 90vh;
+      overflow-y: auto;
+    }
+
+    .modal-content h2 {
+      color: var(--accent-gold);
+      font-size: 1.1rem;
+      margin-bottom: 12px;
+      text-align: center;
+      border-bottom: 1px solid var(--border-color);
+      padding-bottom: 8px;
+    }
+
+    /* Badges Admin */
+    .admin-badges-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 6px;
+      margin-bottom: 12px;
+    }
+
+    .admin-badge-card {
+      background: rgba(0, 0, 0, 0.4);
+      border: 1px solid var(--border-color);
+      border-radius: 8px;
+      padding: 6px 4px;
+      text-align: center;
+    }
+
+    .admin-badge-card.primary { border-color: var(--accent-green); background: rgba(16, 185, 129, 0.1); }
+    .admin-badge-card.secondary { border-color: var(--accent-gold); background: rgba(255, 204, 0, 0.1); }
+    .admin-badge-card.purple { border-color: var(--accent-purple); background: rgba(139, 92, 246, 0.1); }
+
+    .admin-badge-title {
+      font-size: 0.6rem;
+      text-transform: uppercase;
+      color: var(--text-muted);
+      margin-bottom: 2px;
+    }
+
+    .admin-badge-value {
+      font-size: 0.85rem;
+      font-weight: 800;
+    }
+
+    .admin-badge-card.primary .admin-badge-value { color: var(--accent-green); }
+    .admin-badge-card.secondary .admin-badge-value { color: var(--accent-gold); }
+    .admin-badge-card.purple .admin-badge-value { color: var(--accent-purple); }
+
+    /* Fita de Histórico no Admin */
+    .history-tape {
+      background: #090a10;
+      border: 1px solid var(--border-color);
+      border-radius: 8px;
+      padding: 8px;
+      max-height: 180px;
+      overflow-y: auto;
+      margin-bottom: 12px;
+    }
+
+    .tape-item {
+      background: #151828;
+      border: 1px solid var(--border-color);
+      border-radius: 6px;
+      padding: 6px 8px;
+      margin-bottom: 6px;
+      font-size: 0.75rem;
+    }
+
+    .tape-item-header {
+      display: flex;
+      justify-content: space-between;
+      font-weight: 700;
+      color: var(--accent-gold);
+      margin-bottom: 2px;
+    }
+
+    .tape-actions {
+      display: flex;
+      gap: 6px;
+      margin-top: 4px;
+    }
+
+    .btn-tape-share {
+      flex: 1;
+      padding: 3px 6px;
+      border-radius: 4px;
+      border: none;
+      font-size: 0.65rem;
+      font-weight: 700;
+      cursor: pointer;
+      color: #fff;
+    }
+
+    .btn-tape-wsp { background: #25d366; }
+    .btn-tape-email { background: #0078d4; }
+
+    .form-group {
+      margin-bottom: 10px;
+    }
+
+    .form-group label {
+      display: block;
+      font-size: 0.75rem;
+      color: var(--text-muted);
+      margin-bottom: 4px;
+    }
+
+    .form-group input {
+      width: 100%;
+      padding: 8px 10px;
+      border-radius: 8px;
+      border: 1px solid var(--border-color);
+      background: #090a10;
+      color: #fff;
+      font-size: 0.85rem;
+    }
+
+    .modal-actions {
+      display: flex;
+      gap: 10px;
+      margin-top: 12px;
+    }
+
+    .btn-modal {
+      flex: 1;
+      padding: 10px;
+      border-radius: 8px;
+      border: none;
+      font-weight: 700;
+      cursor: pointer;
+      font-size: 0.85rem;
+      transition: transform 0.1s ease;
+    }
+
+    .btn-confirm { background: var(--accent-blue); color: #fff; }
+    
+    .btn-pay { 
+      background: linear-gradient(180deg, #10b981, #059669); 
+      color: #fff; 
+      box-shadow: 0 4px 0 #047857;
+    }
+
+    .btn-pay:active {
+      transform: translateY(3px) scale(0.97);
+      box-shadow: 0 1px 0 #047857;
+    }
+
+    .btn-reset {
+      background: rgba(220, 38, 38, 0.2);
+      border: 1px solid #dc2626;
+      color: #fca5a5;
+      font-size: 0.7rem;
+      padding: 4px;
+      border-radius: 6px;
+      cursor: pointer;
+      width: 100%;
+      margin-top: 4px;
+    }
+
+    .btn-cancel { background: #dc2626; color: #fff; }
+
+    .admin-section-title {
+      font-size: 0.75rem;
+      color: var(--accent-gold);
+      font-weight: 700;
+      margin: 10px 0 6px 0;
+      border-top: 1px dashed var(--border-color);
+      padding-top: 6px;
+    }
+
+    /* Comprovante / Receipt Paper */
+    .receipt-paper {
+      background: #fffef0;
+      color: #111;
+      font-family: 'Courier New', Courier, monospace;
+      padding: 14px;
+      border-radius: 4px;
+      box-shadow: 0 10px 25px rgba(0,0,0,0.5);
+      border-bottom: 8px dashed #d1d1c2;
+      width: 100%;
+      max-width: 320px;
+      margin: 0 auto;
+      font-size: 0.78rem;
+      line-height: 1.3;
+    }
+
+    .receipt-paper h3 {
+      text-align: center;
+      font-size: 1.05rem;
+      font-weight: 900;
+      border-bottom: 2px dashed #000;
+      padding-bottom: 4px;
+      margin-bottom: 6px;
+      text-transform: uppercase;
+    }
+
+    .receipt-row {
+      display: flex;
+      justify-content: space-between;
+      margin-bottom: 3px;
+    }
+
+    .receipt-divider {
+      border-top: 1px dashed #000;
+      margin: 6px 0;
+    }
+
+    .receipt-highlight {
+      font-weight: 800;
+      font-size: 0.85rem;
+    }
+
+    .receipt-share-btns {
+      display: flex;
+      gap: 8px;
+      width: 100%;
+      max-width: 320px;
+      margin-top: 10px;
+    }
+
+    .photo-slot {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      background: #090a10;
+      padding: 4px 8px;
+      border-radius: 8px;
+      border: 1px solid var(--border-color);
+      margin-bottom: 4px;
+    }
+
+    .photo-slot-preview {
+      width: 28px;
+      height: 28px;
+      border-radius: 6px;
+      object-fit: cover;
+      background: #1f2338;
+    }
+
+    .btn-photo-action {
+      background: var(--accent-blue);
+      color: white;
+      border: none;
+      padding: 3px 6px;
+      border-radius: 4px;
+      font-size: 0.7rem;
+      cursor: pointer;
+    }
+
+    .btn-photo-remove { background: #dc2626; }
+    .admin-error { color: #ef4444; font-size: 0.8rem; margin-top: 4px; display: none; }
+  </style>
+</head>
+<body>
+
+  <canvas id="celebrationCanvas"></canvas>
+
+  <div class="container" id="gameContainer">
+    <div>
+      <div class="title-box">
+        <h1>BET do PATINHO</h1>
+        <div class="subtitle">O azar é seu</div>
+      </div>
+
+      <div class="financial-display">
+        <div class="fin-card">
+          <div class="fin-label">Aposta</div>
+          <div class="fin-value fin-bet" id="displayBet">R$ 1,00</div>
+        </div>
+        <div class="fin-card">
+          <div class="fin-label">Prêmio Reservado</div>
+          <div class="fin-value fin-prize" id="displayPrize">R$ 0,00</div>
+        </div>
+      </div>
+
+      <div class="player-section">
+        <input type="text" id="playerNameInput" class="player-input" placeholder="Nome do Jogador" value="NOME">
+      </div>
+
+      <div class="spins-alert" id="spinsAlert">
+        Rodadas Restantes: <span id="availableSpinsText">0</span>
+      </div>
+
+      <!-- Mascote Patinho -->
+      <div class="duck-container">
+        <div id="duckMascot" class="duck-idle">🦆</div>
+      </div>
+
+      <!-- Faixa Marquês em Movimento -->
+      <div class="marquee-container">
+        <div class="marquee-text" id="marqueeText">
+          🔥 PRÊMIO DA RODADA: R$ 0,00 • FAÇA SUA APOSTA E BOA SORTE! • O AZAR É SEU! 🔥
+        </div>
+      </div>
+    </div>
+
+    <!-- Roleta -->
+    <div class="slot-machine">
+      <div class="reel" id="reel1">🎰</div>
+      <div class="reel" id="reel2">🎰</div>
+      <div class="reel" id="reel3">🎰</div>
+    </div>
+
+    <div>
+      <button class="btn-spin" id="spinBtn" onclick="spin()">< GIRAR ></button>
+      <div class="message" id="message">Aguardando pagamento no Admin.</div>
+    </div>
+
+    <div class="footer-stats">
+      <div class="footer-left">
+        <button class="btn-icon" title="Painel Admin" onclick="openAdminModal()">⚙️</button>
+        <button class="btn-icon" id="audioToggle" onclick="toggleAudio()" title="Som">🔊</button>
+        <button class="btn-icon" title="Ver Ticket da Jogada Atual" onclick="openReceiptModal()">📄</button>
+      </div>
+
+      <div class="footer-right">
+        <div class="stat-item">
+          <span>Jogada nº</span>
+          <span class="stat-value" id="gameSequenceStat">1</span>
+        </div>
+        <div class="stat-item" style="margin-left: 10px;">
+          <span>Rodadas</span>
+          <span class="stat-value" id="totalSpinsStat">0</span>
+        </div>
+        <div class="stat-item" style="margin-left: 10px;">
+          <span>Vitórias</span>
+          <span class="stat-value" id="winsStat">0</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal Admin -->
+  <div class="modal-overlay" id="adminModal">
+    <div class="modal-content">
+      <h2>Painel Administrativo</h2>
+      
+      <div id="authStep">
+        <div class="form-group">
+          <label for="adminPass">Senha de Acesso:</label>
+          <input type="password" id="adminPass" placeholder="Senha (padrão: 123)">
+          <div class="admin-error" id="authError">Senha incorreta!</div>
+        </div>
+        <div class="modal-actions">
+          <button class="btn-modal btn-confirm" onclick="authenticateAdmin()">Entrar</button>
+          <button class="btn-modal btn-cancel" onclick="closeAdminModal()">Cancelar</button>
+        </div>
+      </div>
+
+      <div id="configStep" style="display: none;">
+        
+        <!-- Badges de Estatísticas e Valores Pagos -->
+        <div class="admin-badges-grid">
+          <div class="admin-badge-card primary">
+            <div class="admin-badge-title">Caixa Total</div>
+            <div class="admin-badge-value" id="badgeTotalCollected">R$ 0,00</div>
+          </div>
+          <div class="admin-badge-card secondary">
+            <div class="admin-badge-title">Prêmio Reserv.</div>
+            <div class="admin-badge-value" id="badgePrizeFund">R$ 0,00</div>
+          </div>
+          <div class="admin-badge-card purple">
+            <div class="admin-badge-title">Valores Pagos</div>
+            <div class="admin-badge-value" id="badgeTotalPaid">R$ 0,00</div>
+          </div>
+        </div>
+
+        <button class="btn-modal btn-pay" style="width: 100%; margin-bottom: 6px;" onclick="registerPayment(event)">
+          💵 Confirmar Pagamento (+<span id="spinsPerPayLabel">3</span> Rodadas)
+        </button>
+
+        <button class="btn-reset" onclick="resetAcumulado()">
+          🔄 Zerar Caixa e Histórico
+        </button>
+
+        <!-- Fita do Histórico de Jogadas -->
+        <div class="admin-section-title">Fita do Histórico de Jogadas</div>
+        <div class="history-tape" id="historyTapeContainer">
+          <!-- Renderizado via JS -->
+        </div>
+
+        <div class="admin-section-title">Parâmetros do Jogo</div>
+        <div class="form-group">
+          <label for="inputBetValue">Valor da Aposta (R$):</label>
+          <input type="number" id="inputBetValue" step="0.5" min="0.5">
+        </div>
+        <div class="form-group">
+          <label for="inputPayoutPercent">% Reservado para Prêmios:</label>
+          <input type="number" id="inputPayoutPercent" min="1" max="99">
+        </div>
+        <div class="form-group">
+          <label for="inputSpinsPerPay">Rodadas por Pagamento:</label>
+          <input type="number" id="inputSpinsPerPay" min="1">
+        </div>
+        <div class="form-group">
+          <label for="inputWinInterval">Intervalo do Ciclo (Jogadas):</label>
+          <input type="number" id="inputWinInterval" min="1">
+        </div>
+
+        <div class="admin-section-title">Fotos dos Símbolos</div>
+        <div id="photoSlotsContainer">
+          <div class="photo-slot">
+            <img id="prev1" class="photo-slot-preview" alt="F1">
+            <span style="font-size: 0.75rem;">Foto #1</span>
+            <button class="btn-photo-action" onclick="triggerInput(1)" id="btnSlot1">Adicionar</button>
+            <input type="file" id="file1" accept="image/*" style="display:none;" onchange="handleFileSelect(1, event)">
+          </div>
+          <div class="photo-slot">
+            <img id="prev2" class="photo-slot-preview" alt="F2">
+            <span style="font-size: 0.75rem;">Foto #2</span>
+            <button class="btn-photo-action" onclick="triggerInput(2)" id="btnSlot2">Adicionar</button>
+            <input type="file" id="file2" accept="image/*" style="display:none;" onchange="handleFileSelect(2, event)">
+          </div>
+          <div class="photo-slot">
+            <img id="prev3" class="photo-slot-preview" alt="F3">
+            <span style="font-size: 0.75rem;">Foto #3</span>
+            <button class="btn-photo-action" onclick="triggerInput(3)" id="btnSlot3">Adicionar</button>
+            <input type="file" id="file3" accept="image/*" style="display:none;" onchange="handleFileSelect(3, event)">
+          </div>
+        </div>
+
+        <div class="modal-actions">
+          <button class="btn-modal btn-confirm" onclick="saveAdminConfigs()">Salvar</button>
+          <button class="btn-modal btn-cancel" onclick="closeAdminModal()">Fechar</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal de Ticket / Comprovante da Jogada Atual -->
+  <div class="modal-overlay" id="receiptModal">
+    <div style="width: 100%; display: flex; flex-direction: column; align-items: center;">
+      <div class="receipt-paper" id="receiptContent">
+        <h3>BET DO PATINHO</h3>
+        <p style="text-align: center; font-size: 0.65rem; margin-bottom: 6px;">TICKET DE COMPROVANTE</p>
+        <div class="receipt-divider"></div>
+        <div class="receipt-row"><span>DATA/HORA:</span><span id="rcpDate">-</span></div>
+        <div class="receipt-row"><span>JOGADA Nº:</span><span id="rcpGameNum" class="receipt-highlight">#0000</span></div>
+        <div class="receipt-row"><span>JOGADOR:</span><span id="rcpPlayer">-</span></div>
+        <div class="receipt-divider"></div>
+        <div class="receipt-row"><span>VALOR PAGO:</span><span id="rcpBetVal">R$ 0,00</span></div>
+        <div class="receipt-row"><span>RODADAS PACOTE:</span><span id="rcpTotalSpins">3</span></div>
+        <div class="receipt-row"><span>STATUS RODADA:</span><span id="rcpStatus">NÃO PREMIADO</span></div>
+        <div class="receipt-row" id="rcpWinRoundRow" style="display:none;"><span>PREMIADO NO:</span><span id="rcpWinRound" class="receipt-highlight">-</span></div>
+        <div class="receipt-divider"></div>
+        <div class="receipt-row receipt-highlight"><span>VALOR GANHO:</span><span id="rcpPrizeVal">R$ 0,00</span></div>
+        <div class="receipt-divider"></div>
+        <p style="text-align: center; font-size: 0.6rem; margin-top: 4px;">*** O AZAR É SEU! OBRIGADO ***</p>
+      </div>
+
+      <div class="receipt-share-btns">
+        <button class="btn-modal" style="background:#25d366; color:#fff;" onclick="shareCurrentTicket('whatsapp')">WhatsApp</button>
+        <button class="btn-modal" style="background:#0078d4; color:#fff;" onclick="shareCurrentTicket('email')">E-mail</button>
+      </div>
+
+      <button class="btn-modal btn-confirm" style="margin-top: 10px; width: 200px;" onclick="closeReceiptModal()">Fechar Ticket</button>
+    </div>
+  </div>
+
+  <script>
+    const emojiSymbols = [
+      { id: 'moeda', type: 'emoji', value: '🪙' },
+      { id: 'trofeu', type: 'emoji', value: '🏆' },
+      { id: 'diamante', type: 'emoji', value: '💎' },
+      { id: 'sete', type: 'emoji', value: '7️⃣' },
+      { id: 'saco', type: 'emoji', value: '💰' },
+      { id: 'coroa', type: 'emoji', value: '👑' },
+      { id: 'estrela', type: 'emoji', value: '⭐' }
+    ];
+
+    let customPhotos = [null, null, null];
+
+    // Elementos DOM
+    const reel1 = document.getElementById('reel1');
+    const reel2 = document.getElementById('reel2');
+    const reel3 = document.getElementById('reel3');
+    const spinBtn = document.getElementById('spinBtn');
+    const message = document.getElementById('message');
+    const audioToggle = document.getElementById('audioToggle');
+    const gameContainer = document.getElementById('gameContainer');
+    const displayBet = document.getElementById('displayBet');
+    const displayPrize = document.getElementById('displayPrize');
+    const availableSpinsText = document.getElementById('availableSpinsText');
+    const totalSpinsStat = document.getElementById('totalSpinsStat');
+    const winsStat = document.getElementById('winsStat');
+    const gameSequenceStat = document.getElementById('gameSequenceStat');
+    const playerNameInput = document.getElementById('playerNameInput');
+    const duckMascot = document.getElementById('duckMascot');
+    const marqueeText = document.getElementById('marqueeText');
+
+    const adminModal = document.getElementById('adminModal');
+    const authStep = document.getElementById('authStep');
+    const configStep = document.getElementById('configStep');
+    const adminPassInput = document.getElementById('adminPass');
+    const authError = document.getElementById('authError');
+
+    const badgeTotalCollected = document.getElementById('badgeTotalCollected');
+    const badgePrizeFund = document.getElementById('badgePrizeFund');
+    const badgeTotalPaid = document.getElementById('badgeTotalPaid');
+    const historyTapeContainer = document.getElementById('historyTapeContainer');
+
+    const inputBetValue = document.getElementById('inputBetValue');
+    const inputWinInterval = document.getElementById('inputWinInterval');
+    const inputPayoutPercent = document.getElementById('inputPayoutPercent');
+    const inputSpinsPerPay = document.getElementById('inputSpinsPerPay');
+    const spinsPerPayLabel = document.getElementById('spinsPerPayLabel');
+
+    const receiptModal = document.getElementById('receiptModal');
+
+    // Estado do Jogo
+    let totalCollectedAmount = 0; // Caixa arrecadado
+    let totalPaidOutAmount = 0;   // Valores pagos acumulados
+    let betValue = 5.00;
+    let payoutPercent = 70;
+
+    let winInterval = 10;
+    let spinsPerPayment = 3;
+    let availableSpins = 0;
+    let currentSessionSpins = 0; 
+    let sessionWinRound = 0; 
+
+    let currentGameNumber = 1;
+    let totalSpins = 0;
+    let totalWins = 0;
+    let winningSpinsInCycle = [];
+    let gameHistory = []; // Fita de histórico
+    let lastReceiptData = null;
+
+    let adminAuthenticated = false;
+    let soundEnabled = true;
+    let audioCtx = null;
+
+    // Inicialização
+    loadPersistentData();
+    generateWinningSpinsForCycle();
+    renderSymbol(reel1, emojiSymbols[0]);
+    renderSymbol(reel2, emojiSymbols[1]);
+    renderSymbol(reel3, emojiSymbols[2]);
+    updateUI();
+
+    function loadPersistentData() {
+      const savedCollected = localStorage.getItem('bet_patinho_collected');
+      if (savedCollected) totalCollectedAmount = parseFloat(savedCollected);
+
+      const savedPaid = localStorage.getItem('bet_patinho_paid');
+      if (savedPaid) totalPaidOutAmount = parseFloat(savedPaid);
+
+      const savedNumber = localStorage.getItem('bet_patinho_game_num');
+      if (savedNumber) currentGameNumber = parseInt(savedNumber);
+
+      const savedBet = localStorage.getItem('bet_patinho_bet_val');
+      if (savedBet) betValue = parseFloat(savedBet);
+
+      const savedInterval = localStorage.getItem('bet_patinho_interval');
+      if (savedInterval) winInterval = parseInt(savedInterval);
+
+      const savedPayout = localStorage.getItem('bet_patinho_payout');
+      if (savedPayout) payoutPercent = parseInt(savedPayout);
+
+      const savedSpinsPerPay = localStorage.getItem('bet_patinho_spins_pay');
+      if (savedSpinsPerPay) spinsPerPayment = parseInt(savedSpinsPerPay);
+
+      const savedReceipt = localStorage.getItem('bet_patinho_last_receipt');
+      if (savedReceipt) lastReceiptData = JSON.parse(savedReceipt);
+
+      const savedHistory = localStorage.getItem('bet_patinho_history');
+      if (savedHistory) gameHistory = JSON.parse(savedHistory);
+    }
+
+    function savePersistentData() {
+      localStorage.setItem('bet_patinho_collected', totalCollectedAmount.toString());
+      localStorage.setItem('bet_patinho_paid', totalPaidOutAmount.toString());
+      localStorage.setItem('bet_patinho_game_num', currentGameNumber.toString());
+      localStorage.setItem('bet_patinho_bet_val', betValue.toString());
+      localStorage.setItem('bet_patinho_interval', winInterval.toString());
+      localStorage.setItem('bet_patinho_payout', payoutPercent.toString());
+      localStorage.setItem('bet_patinho_spins_pay', spinsPerPayment.toString());
+      if (lastReceiptData) localStorage.setItem('bet_patinho_last_receipt', JSON.stringify(lastReceiptData));
+      localStorage.setItem('bet_patinho_history', JSON.stringify(gameHistory));
+    }
+
+    function calculatePrizeFund() {
+      return totalCollectedAmount * (payoutPercent / 100);
+    }
+
+    function updateUI() {
+      const prizeFund = calculatePrizeFund();
+      const prizeFormatted = `R$ ${prizeFund.toFixed(2).replace('.', ',')}`;
+      
+      displayBet.innerText = `R$ ${betValue.toFixed(2).replace('.', ',')}`;
+      displayPrize.innerText = prizeFormatted;
+      
+      availableSpinsText.innerText = availableSpins;
+      totalSpinsStat.innerText = totalSpins;
+      winsStat.innerText = totalWins;
+      gameSequenceStat.innerText = currentGameNumber;
+      spinsPerPayLabel.innerText = spinsPerPayment;
+
+      // Atualiza Marques
+      marqueeText.innerText = `🔥 PRÊMIO RESERVADO NA RODADA: ${prizeFormatted} • FAÇA SUA APOSTA E BOA SORTE! • O AZAR É SEU! 🔥`;
+
+      // Atualiza Badges Admin
+      badgeTotalCollected.innerText = `R$ ${totalCollectedAmount.toFixed(2).replace('.', ',')}`;
+      badgePrizeFund.innerText = prizeFormatted;
+      badgeTotalPaid.innerText = `R$ ${totalPaidOutAmount.toFixed(2).replace('.', ',')}`;
+
+      spinBtn.disabled = availableSpins <= 0;
+      renderHistoryTape();
+    }
+
+    function renderHistoryTape() {
+      if (!historyTapeContainer) return;
+      if (gameHistory.length === 0) {
+        historyTapeContainer.innerHTML = '<div style="text-align:center; color:var(--text-muted); font-size:0.75rem;">Nenhuma jogada registrada.</div>';
+        return;
+      }
+
+      historyTapeContainer.innerHTML = gameHistory.slice().reverse().map((item, index) => {
+        const winBadge = item.isWin ? `<span style="color:var(--accent-gold);">🏆 R$ ${item.prizeVal.toFixed(2).replace('.', ',')}</span>` : `<span style="color:var(--text-muted);">Não Premiado</span>`;
+        return `
+          <div class="tape-item">
+            <div class="tape-item-header">
+              <span>#${String(item.gameNum).padStart(4, '0')} - ${item.player}</span>
+              ${winBadge}
+            </div>
+            <div style="color:var(--text-muted); font-size:0.65rem;">${item.date} | Valor Pago: R$ ${item.betVal.toFixed(2).replace('.', ',')}</div>
+            <div class="tape-actions">
+              <button class="btn-tape-share btn-tape-wsp" onclick="shareTicket(${item.gameNum}, 'whatsapp')">WhatsApp</button>
+              <button class="btn-tape-share btn-tape-email" onclick="shareTicket(${item.gameNum}, 'email')">E-mail</button>
+            </div>
+          </div>
+        `;
+      }).join('');
+    }
+
+    function registerPayment(event) {
+      initAudio();
+      playSound('pay_register');
+
+      totalCollectedAmount += betValue;
+      availableSpins += spinsPerPayment;
+      currentSessionSpins = 0;
+      sessionWinRound = 0;
+
+      savePersistentData();
+      updateUI();
+      message.className = 'message';
+      message.innerText = `Pagamento confirmado! +${spinsPerPayment} rodadas liberadas.`;
+    }
+
+    function resetAcumulado() {
+      if (confirm("Tem certeza que deseja zerar os Caixas e o Histórico?")) {
+        totalCollectedAmount = 0;
+        totalPaidOutAmount = 0;
+        gameHistory = [];
+        lastReceiptData = null;
+        savePersistentData();
+        updateUI();
+      }
+    }
+
+    function openAdminModal() {
+      adminModal.classList.add('active');
+      authError.style.display = 'none';
+      adminPassInput.value = '';
+
+      if (adminAuthenticated) {
+        showConfigStep();
+      } else {
+        authStep.style.display = 'block';
+        configStep.style.display = 'none';
+        adminPassInput.focus();
+      }
+    }
+
+    function closeAdminModal() { adminModal.classList.remove('active'); }
+
+    function authenticateAdmin() {
+      if (adminPassInput.value === '123') {
+        adminAuthenticated = true;
+        authError.style.display = 'none';
+        showConfigStep();
+      } else {
+        authError.style.display = 'block';
+      }
+    }
+
+    function showConfigStep() {
+      authStep.style.display = 'none';
+      configStep.style.display = 'block';
+      inputBetValue.value = betValue;
+      inputWinInterval.value = winInterval;
+      inputPayoutPercent.value = payoutPercent;
+      inputSpinsPerPay.value = spinsPerPayment;
+      updateUI();
+    }
+
+    function saveAdminConfigs() {
+      const newBet = parseFloat(inputBetValue.value);
+      const newInterval = parseInt(inputWinInterval.value);
+      const newPercent = parseInt(inputPayoutPercent.value);
+      const newSpinsPerPay = parseInt(inputSpinsPerPay.value);
+
+      if (!isNaN(newBet) && newBet > 0) betValue = newBet;
+      if (!isNaN(newInterval) && newInterval >= 1) winInterval = newInterval;
+      if (!isNaN(newPercent) && newPercent >= 1 && newPercent <= 99) payoutPercent = newPercent;
+      if (!isNaN(newSpinsPerPay) && newSpinsPerPay >= 1) spinsPerPayment = newSpinsPerPay;
+
+      generateWinningSpinsForCycle();
+      savePersistentData();
+      updateUI();
+      closeAdminModal();
+    }
+
+    function triggerInput(index) {
+      if (customPhotos[index - 1]) {
+        customPhotos[index - 1] = null;
+        document.getElementById(`prev${index}`).src = '';
+        const btn = document.getElementById(`btnSlot${index}`);
+        btn.textContent = 'Adicionar';
+        btn.classList.remove('btn-photo-remove');
+      } else {
+        document.getElementById(`file${index}`).click();
+      }
+    }
+
+    function handleFileSelect(index, event) {
+      const file = event.target.files[0];
+      if (file) {
+        const reader = new FileReader();
+        reader.onload = function(evt) {
+          customPhotos[index - 1] = {
+            id: `custom_${index}`,
+            type: 'image',
+            value: evt.target.result
+          };
+          document.getElementById(`prev${index}`).src = evt.target.result;
+          const btn = document.getElementById(`btnSlot${index}`);
+          btn.textContent = 'Remover';
+          btn.classList.add('btn-photo-remove');
+        };
+        reader.readAsDataURL(file);
+      }
+    }
+
+    function getActiveSymbols() {
+      const symbols = [...emojiSymbols];
+      customPhotos.forEach(p => { if (p !== null) symbols.push(p); });
+      return symbols;
+    }
+
+    function renderSymbol(reelElem, symbol) {
+      if (symbol.type === 'image') {
+        reelElem.innerHTML = `<img src="${symbol.value}" alt="Foto">`;
+      } else {
+        reelElem.innerText = symbol.value;
+      }
+    }
+
+    function generateWinningSpinsForCycle() {
+      const targetIndex = Math.floor(Math.random() * winInterval) + 1;
+      winningSpinsInCycle = [targetIndex];
+    }
+
+    /* Web Audio API */
+    function initAudio() {
+      if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+      if (audioCtx.state === 'suspended') audioCtx.resume();
+    }
+
+    function toggleAudio() {
+      soundEnabled = !soundEnabled;
+      audioToggle.innerText = soundEnabled ? '🔊' : '🔇';
+    }
+
+    function playSound(type) {
+      if (!soundEnabled || !audioCtx) return;
+      const now = audioCtx.currentTime;
+
+      if (type === 'tick') {
+        const bufferSize = audioCtx.sampleRate * 0.015;
+        const buffer = audioCtx.createBuffer(1, bufferSize, audioCtx.sampleRate);
+        const data = buffer.getChannelData(0);
+        for (let i = 0; i < bufferSize; i++) {
+          data[i] = (Math.random() * 2 - 1) * Math.exp(-i / (bufferSize * 0.3));
+        }
+        const noise = audioCtx.createBufferSource();
+        noise.buffer = buffer;
+        const filter = audioCtx.createBiquadFilter();
+        filter.type = 'bandpass';
+        filter.frequency.setValueAtTime(1200, now);
+        const gain = audioCtx.createGain();
+        gain.gain.setValueAtTime(0.08, now);
+        noise.connect(filter);
+        filter.connect(gain);
+        gain.connect(audioCtx.destination);
+        noise.start(now);
+      } else if (type === 'stop') {
+        const osc = audioCtx.createOscillator();
+        const gain = audioCtx.createGain();
+        osc.type = 'sine';
+        osc.frequency.setValueAtTime(160, now);
+        osc.frequency.exponentialRampToValueAtTime(40, now + 0.06);
+        gain.gain.setValueAtTime(0.25, now);
+        gain.gain.exponentialRampToValueAtTime(0.01, now + 0.06);
+        osc.connect(gain);
+        gain.connect(audioCtx.destination);
+        osc.start(now);
+        osc.stop(now + 0.06);
+      } else if (type === 'pay_register') {
+        const osc1 = audioCtx.createOscillator();
+        const osc2 = audioCtx.createOscillator();
+        const gain = audioCtx.createGain();
+        osc1.type = 'triangle';
+        osc2.type = 'sine';
+        osc1.frequency.setValueAtTime(987.77, now);
+        osc2.frequency.setValueAtTime(1318.51, now + 0.08);
+        gain.gain.setValueAtTime(0.2, now);
+        gain.gain.exponentialRampToValueAtTime(0.01, now + 0.3);
+        osc1.connect(gain);
+        osc2.connect(gain);
+        gain.connect(audioCtx.destination);
+        osc1.start(now);
+        osc2.start(now + 0.08);
+        osc1.stop(now + 0.3);
+        osc2.stop(now + 0.3);
+      } else if (type === 'win_jackpot') {
+        const notes = [523.25, 659.25, 783.99, 1046.50, 1318.51];
+        notes.forEach((freq, idx) => {
+          const osc = audioCtx.createOscillator();
+          const gain = audioCtx.createGain();
+          osc.type = 'sine';
+          osc.frequency.setValueAtTime(freq, now + (idx * 0.1));
+          gain.gain.setValueAtTime(0.25, now + (idx * 0.1));
+          gain.gain.exponentialRampToValueAtTime(0.01, now + (idx * 0.1) + 0.35);
+          osc.connect(gain);
+          gain.connect(audioCtx.destination);
+          osc.start(now + (idx * 0.1));
+          osc.stop(now + (idx * 0.1) + 0.35);
+        });
+      }
+    }
+
+    function spin() {
+      if (availableSpins <= 0) return;
+
+      initAudio();
+      availableSpins--;
+      currentSessionSpins++;
+      totalSpins++;
+      updateUI();
+
+      spinBtn.disabled = true;
+      message.className = 'message';
+      message.innerText = 'Girando... Boa sorte!';
+
+      reel1.classList.add('spinning');
+      reel2.classList.add('spinning');
+      reel3.classList.add('spinning');
+
+      const currentCycleIndex = ((totalSpins - 1) % winInterval) + 1;
+      if (currentCycleIndex === 1 && totalSpins > 1) generateWinningSpinsForCycle();
+
+      const shouldWin = winningSpinsInCycle.includes(currentCycleIndex);
+      const activeSymbols = getActiveSymbols();
+
+      let final1, final2, final3;
+
+      if (shouldWin) {
+        const winningSymbol = activeSymbols[Math.floor(Math.random() * activeSymbols.length)];
+        final1 = winningSymbol;
+        final2 = winningSymbol;
+        final3 = winningSymbol;
+      } else {
+        const s1 = activeSymbols[Math.floor(Math.random() * activeSymbols.length)];
+        let s2 = activeSymbols[Math.floor(Math.random() * activeSymbols.length)];
+        let s3 = activeSymbols[Math.floor(Math.random() * activeSymbols.length)];
+
+        if (s1.id === s2.id && s2.id === s3.id) {
+          const distinct = activeSymbols.filter(s => s.id !== s1.id);
+          s3 = distinct[Math.floor(Math.random() * distinct.length)];
+        }
+
+        final1 = s1;
+        final2 = s2;
+        final3 = s3;
+      }
+
+      const spinTimer = setInterval(() => {
+        if (reel1.classList.contains('spinning')) renderSymbol(reel1, activeSymbols[Math.floor(Math.random() * activeSymbols.length)]);
+        if (reel2.classList.contains('spinning')) renderSymbol(reel2, activeSymbols[Math.floor(Math.random() * activeSymbols.length)]);
+        if (reel3.classList.contains('spinning')) renderSymbol(reel3, activeSymbols[Math.floor(Math.random() * activeSymbols.length)]);
+        playSound('tick');
+      }, 80);
+
+      setTimeout(() => {
+        reel1.classList.remove('spinning');
+        renderSymbol(reel1, final1);
+        playSound('stop');
+      }, 1200);
+
+      setTimeout(() => {
+        reel2.classList.remove('spinning');
+        renderSymbol(reel2, final2);
+        playSound('stop');
+      }, 1700);
+
+      setTimeout(() => {
+        clearInterval(spinTimer);
+        reel3.classList.remove('spinning');
+        renderSymbol(reel3, final3);
+        playSound('stop');
+
+        checkResult(final1, final2, final3);
+        if (availableSpins > 0) spinBtn.disabled = false;
+      }, 2200);
+    }
+
+    function checkResult(r1, r2, r3) {
+      const isWin = (r1.id === r2.id && r2.id === r3.id);
+      const playerName = playerNameInput.value.trim() || 'Jogador 1';
+      const prizeValue = isWin ? calculatePrizeFund() : 0;
+
+      if (isWin) {
+        totalWins++;
+        sessionWinRound = currentSessionSpins;
+
+        // Deduz do caixa e incrementa valores pagos acumulados
+        totalCollectedAmount = Math.max(0, totalCollectedAmount - prizeValue);
+        totalPaidOutAmount += prizeValue;
+
+        updateUI();
+
+        gameContainer.classList.add('shake');
+        setTimeout(() => gameContainer.classList.remove('shake'), 600);
+
+        const prizeFormatted = prizeValue.toFixed(2).replace('.', ',');
+        message.className = 'message win-jackpot';
+        message.innerHTML = `🔥 GANHOU R$ ${prizeFormatted}! 🔥`;
+        playSound('win_jackpot');
+        triggerCelebration();
+
+        triggerCrazyDuck();
+      } else {
+        message.className = 'message';
+        if (availableSpins > 0) {
+          message.innerText = 'Tente novamente!';
+        } else {
+          message.innerText = 'Rodadas esgotadas. Registre novo pagamento no Admin!';
+        }
+      }
+
+      if (isWin || availableSpins === 0) {
+        generateReceipt(playerName, isWin, prizeValue);
+        currentGameNumber++;
+        savePersistentData();
+        updateUI();
+      }
+    }
+
+    function triggerCrazyDuck() {
+      duckMascot.classList.remove('duck-idle');
+      duckMascot.classList.add('duck-crazy');
+
+      setTimeout(() => {
+        duckMascot.classList.remove('duck-crazy');
+        duckMascot.classList.add('duck-idle');
+      }, 4000);
+    }
+
+    function generateReceipt(playerName, isWin, prizeValue) {
+      const now = new Date();
+      const dateStr = `${now.toLocaleDateString('pt-BR')} ${now.toLocaleTimeString('pt-BR')}`;
+      
+      const ticket = {
+        date: dateStr,
+        gameNum: currentGameNumber,
+        player: playerName,
+        betVal: betValue,
+        totalSpins: spinsPerPayment,
+        isWin: isWin,
+        winRound: sessionWinRound,
+        prizeVal: prizeValue
+      };
+
+      lastReceiptData = ticket;
+      gameHistory.push(ticket);
+
+      savePersistentData();
+    }
+
+    function openReceiptModal() {
+      if (!lastReceiptData) {
+        alert("Nenhum ticket registrado para esta jogada ainda!");
+        return;
+      }
+
+      document.getElementById('rcpDate').innerText = lastReceiptData.date;
+      document.getElementById('rcpGameNum').innerText = `#${String(lastReceiptData.gameNum).padStart(4, '0')}`;
+      document.getElementById('rcpPlayer').innerText = lastReceiptData.player;
+      document.getElementById('rcpBetVal').innerText = `R$ ${lastReceiptData.betVal.toFixed(2).replace('.', ',')}`;
+      document.getElementById('rcpTotalSpins').innerText = lastReceiptData.totalSpins;
+      document.getElementById('rcpStatus').innerText = lastReceiptData.isWin ? 'PREMIADO 🔥' : 'NÃO PREMIADO';
+      
+      const winRow = document.getElementById('rcpWinRoundRow');
+      if (lastReceiptData.isWin) {
+        winRow.style.display = 'flex';
+        document.getElementById('rcpWinRound').innerText = `${lastReceiptData.winRound}º aperto`;
+      } else {
+        winRow.style.display = 'none';
+      }
+
+      document.getElementById('rcpPrizeVal').innerText = `R$ ${lastReceiptData.prizeVal.toFixed(2).replace('.', ',')}`;
+      receiptModal.classList.add('active');
+    }
+
+    function closeReceiptModal() {
+      receiptModal.classList.remove('active');
+    }
+
+    // Função para compartilhar tickets via WhatsApp e E-mail
+    function shareTicket(gameNum, channel) {
+      const ticket = gameHistory.find(t => t.gameNum === gameNum) || lastReceiptData;
+      if (!ticket) return;
+
+      const text = `*BET DO PATINHO - COMPROVANTE*\n` +
+                   `Jogada: #${String(ticket.gameNum).padStart(4, '0')}\n` +
+                   `Jogador: ${ticket.player}\n` +
+                   `Data: ${ticket.date}\n` +
+                   `Valor Aposta: R$ ${ticket.betVal.toFixed(2).replace('.', ',')}\n` +
+                   `Status: ${ticket.isWin ? 'PREMIADO 🔥' : 'Não Premiado'}\n` +
+                   `Valor Ganho: R$ ${ticket.prizeVal.toFixed(2).replace('.', ',')}\n` +
+                   `*** O AZAR É SEU! ***`;
+
+      if (channel === 'whatsapp') {
+        window.open(`https://api.whatsapp.com/send?text=${encodeURIComponent(text)}`, '_blank');
+      } else if (channel === 'email') {
+        window.open(`mailto:?subject=${encodeURIComponent(`Comprovante BET do Patinho #${ticket.gameNum}`)}&body=${encodeURIComponent(text)}`, '_blank');
+      }
+    }
+
+    function shareCurrentTicket(channel) {
+      if (lastReceiptData) {
+        shareTicket(lastReceiptData.gameNum, channel);
+      }
+    }
+
+    // Canvas Confete / Partículas
+    const canvas = document.getElementById('celebrationCanvas');
+    const ctx = canvas.getContext('2d');
+    let particles = [];
+
+    function resizeCanvas() {
+      canvas.width = window.innerWidth;
+      canvas.height = window.innerHeight;
+    }
+    window.addEventListener('resize', resizeCanvas);
+    resizeCanvas();
+
+    class Particle {
+      constructor(x, y) {
+        this.x = x;
+        this.y = y;
+        const angle = Math.random() * Math.PI * 2;
+        const speed = Math.random() * 10 + 4;
+        this.vx = Math.cos(angle) * speed;
+        this.vy = Math.sin(angle) * speed - 3;
+        this.gravity = 0.12;
+        this.alpha = 1;
+        this.decay = Math.random() * 0.015 + 0.008;
+        this.size = Math.random() * 8 + 4;
+        this.color = ['#FFCC00', '#FF3300', '#FF00CC', '#00FFFF', '#FFFFFF'][Math.floor(Math.random() * 5)];
+      }
+
+      update() {
+        this.x += this.vx;
+        this.y += this.vy;
+        this.vy += this.gravity;
+        this.alpha -= this.decay;
+      }
+
+      draw() {
+        ctx.save();
+        ctx.globalAlpha = Math.max(0, this.alpha);
+        ctx.fillStyle = this.color;
+        ctx.beginPath();
+        ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.restore();
+      }
+    }
+
+    function triggerCelebration() {
+      particles = [];
+      for (let f = 0; f < 5; f++) {
+        const x = Math.random() * canvas.width * 0.8 + canvas.width * 0.1;
+        const y = Math.random() * canvas.height * 0.4 + canvas.height * 0.1;
+        for (let i = 0; i < 40; i++) {
+          particles.push(new Particle(x, y));
+        }
+      }
+      animateParticles();
+    }
+
+    function animateParticles() {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      particles.forEach((p, index) => {
+        p.update();
+        p.draw();
+        if (p.alpha <= 0) particles.splice(index, 1);
+      });
+
+      if (particles.length > 0) {
+        requestAnimationFrame(animateParticles);
+      } else {
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+      }
+    }
+  </script>
+</body>
+</html>

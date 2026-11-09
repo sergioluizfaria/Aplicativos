@@ -1,0 +1,541 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+<meta name="theme-color" content="#e9edf3">
+<title>Tecla Mágica — Digite, Sílabas e Ditado</title>
+<style>
+/* ================= BASE ================= */
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{width:100%;height:100%;overflow:hidden;background:#e9edf3;
+  font-family:Roboto,'Segoe UI','Helvetica Neue',Arial,sans-serif;color:#202124;
+  touch-action:manipulation;user-select:none;-webkit-user-select:none}
+button{font-family:inherit;border:0;cursor:pointer}
+.hidden{display:none!important}
+#app{position:fixed;inset:0;display:flex;flex-direction:column}
+
+/* ================= BARRA DO APP ================= */
+#bar{display:flex;align-items:center;gap:12px;
+  padding:calc(10px + env(safe-area-inset-top)) 16px 6px}
+#logo{width:42px;height:42px;border-radius:14px;flex:none;display:flex;align-items:center;justify-content:center;
+  font-size:22px;background:linear-gradient(135deg,#4285f4,#1a73e8);
+  box-shadow:0 3px 10px rgba(26,115,232,.35)}
+#bar h1{font-size:18px;font-weight:600;line-height:1.2}
+#bar small{display:block;font-size:11px;color:#5f6368;font-weight:400}
+#bar .grow{flex:1}
+.icon{width:42px;height:42px;border-radius:50%;background:#fff;font-size:17px;
+  box-shadow:0 1px 4px rgba(0,0,0,.12);display:flex;align-items:center;justify-content:center;
+  position:relative;overflow:hidden}
+.icon:active{background:#e8ebf0}
+.chip{height:34px;padding:0 14px;border-radius:17px;background:#e8f0fe;color:#1a73e8;
+  font-size:12px;font-weight:700;letter-spacing:.5px;position:relative;overflow:hidden}
+.chip:active{background:#d2e3fc}
+
+/* ================= SELETOR DE MODO ================= */
+#modes{display:flex;gap:6px;padding:2px 14px 8px}
+.mbtn{flex:1;padding:10px 4px;border-radius:22px;background:#fff;color:#5f6368;
+  font-size:12px;font-weight:600;box-shadow:0 1px 3px rgba(0,0,0,.10);
+  position:relative;overflow:hidden}
+.mbtn.on{background:#1a73e8;color:#fff;box-shadow:0 3px 8px rgba(26,115,232,.35)}
+
+#views{flex:1;display:flex;flex-direction:column;min-height:0}
+#views section{flex:1;display:flex;flex-direction:column;min-height:0}
+
+/* ================= VISOR (teclado livre) ================= */
+#card{flex:1;margin:4px 14px;background:#fff;border-radius:22px;padding:14px 18px;
+  box-shadow:0 2px 12px rgba(60,64,67,.10);display:flex;flex-direction:column;min-height:50px}
+#meta{font-size:11px;color:#80868b;margin-bottom:8px;letter-spacing:.3px}
+#disp{flex:1;overflow-y:auto}
+#dispTxt{font-size:clamp(24px,7vw,34px);line-height:1.75;word-break:break-all;letter-spacing:1px}
+#dispTxt .ph{color:#bdc1c6;font-size:14px;letter-spacing:.5px}
+#dispTxt span[data-i]{display:inline-block}
+#dispTxt .cv{color:#1a73e8;font-weight:700}
+#dispTxt .cn{color:#188038;font-weight:700}
+#dispTxt .cs{color:#9aa0a6}
+#dispTxt .hl{background:#feefc3;border-radius:6px}
+#dispTxt .new{animation:popIn .18s ease}
+@keyframes popIn{from{transform:scale(.3);opacity:.2}}
+.cur{display:inline-block;width:2px;height:1em;background:#1a73e8;margin-left:2px;
+  vertical-align:-3px;animation:blink 1s steps(2) infinite}
+@keyframes blink{50%{opacity:0}}
+
+/* ================= AÇÕES ================= */
+.acts{display:flex;gap:10px;padding:8px 14px}
+.abtn{position:relative;overflow:hidden;border-radius:26px;padding:13px 18px;
+  font-size:13px;font-weight:600;letter-spacing:.3px;display:flex;align-items:center;
+  justify-content:center;gap:8px}
+.abtn.tonal{background:#f1f3f4;color:#5f6368}
+.abtn.tonal:active{background:#e3e6e8}
+.abtn.blue{background:#e8f0fe;color:#1a73e8}
+.abtn.blue:active{background:#d2e3fc}
+.abtn.primary{flex:1;background:#1a73e8;color:#fff;box-shadow:0 3px 10px rgba(26,115,232,.4)}
+.abtn.primary:active{background:#1765c8}
+
+/* ================= SÍLABAS ================= */
+#consRow{display:flex;gap:6px;overflow-x:auto;padding:4px 14px 8px;flex:none}
+#consRow::-webkit-scrollbar{display:none}
+.cchip{flex:none;min-width:44px;height:44px;border-radius:22px;background:#fff;color:#202124;
+  font-size:16px;font-weight:700;box-shadow:0 1px 3px rgba(0,0,0,.12);position:relative;overflow:hidden}
+.cchip.vogc{color:#f29900}
+.cchip.on{background:#1a73e8;color:#fff}
+.cchip.vogc.on{background:#f29900;color:#fff}
+#sylCards{flex:1;display:flex;flex-wrap:wrap;gap:12px;align-content:center;justify-content:center;
+  padding:6px 16px;overflow-y:auto}
+.syl{flex:1 1 28%;max-width:150px;height:clamp(84px,26vw,130px);border-radius:20px;background:#fff;
+  box-shadow:0 2px 10px rgba(60,64,67,.12);font-size:clamp(26px,9vw,40px);font-weight:700;
+  display:flex;align-items:center;justify-content:center;gap:2px;position:relative;overflow:hidden;
+  transition:transform .08s}
+.syl:active{transform:scale(.95)}
+.syl .cA{color:#1a73e8}
+.syl .cB{color:#f29900}
+.syl.solo{flex:1 1 55%;height:clamp(110px,34vw,170px);font-size:clamp(44px,16vw,72px)}
+.syl.on{background:#e8f0fe;box-shadow:0 0 0 3px #1a73e8}
+
+/* ================= DITADO ================= */
+#ditHud{display:flex;gap:8px;padding:2px 14px 8px;align-items:center;flex-wrap:wrap;flex:none}
+.lchip{padding:9px 14px;border-radius:20px;background:#fff;color:#5f6368;font-size:12px;
+  font-weight:700;box-shadow:0 1px 3px rgba(0,0,0,.10);position:relative;overflow:hidden}
+.lchip.on{background:#188038;color:#fff}
+#ditHud .grow{flex:1}
+.schip{padding:9px 12px;border-radius:20px;background:#e8f0fe;color:#1a73e8;font-size:12px;font-weight:700}
+#ditCard{flex:1;margin:0 14px;background:#fff;border-radius:22px;padding:18px;
+  display:flex;flex-direction:column;align-items:center;justify-content:center;gap:18px;
+  box-shadow:0 2px 12px rgba(60,64,67,.10)}
+#ditPrompt{font-size:13px;color:#5f6368;text-align:center;line-height:1.6}
+#ditBoxes{display:flex;gap:8px;flex-wrap:wrap;justify-content:center}
+.dbox{width:clamp(40px,11vw,56px);height:clamp(40px,11vw,56px);border-radius:12px;
+  border:2px dashed #c4c9cf;background:#fafbfc;display:flex;align-items:center;justify-content:center;
+  font-size:clamp(18px,6vw,26px);font-weight:700}
+.dbox.fill{border-style:solid;border-color:#1a73e8;background:#e8f0fe}
+.dbox.bad{border-style:solid;border-color:#d93025;background:#fce8e6;animation:shake .35s}
+.dbox.win{border-style:solid;border-color:#188038;background:#e6f4ea;animation:popIn .3s}
+.dbox.rev{border-style:solid;border-color:#f29900;background:#fef7e0;color:#b06000}
+@keyframes shake{0%,100%{transform:translateX(0)}25%{transform:translateX(-6px)}75%{transform:translateX(6px)}}
+#ditMsg{font-size:14px;font-weight:600;min-height:20px;text-align:center}
+
+/* ================= TECLADO GBOARD ================= */
+#kb{padding:4px 5px calc(8px + env(safe-area-inset-bottom));background:#dfe3ea;flex:none}
+.krow{display:flex;justify-content:center;gap:5px;margin-top:6px}
+.key{position:relative;overflow:hidden;flex:1;height:11.6vw;max-height:52px;min-width:0;
+  border-radius:9px;background:#fff;color:#202124;font-size:16px;font-weight:600;
+  box-shadow:0 1px 0 rgba(0,0,0,.20),0 1px 3px rgba(0,0,0,.10);
+  display:flex;align-items:center;justify-content:center}
+.key:active{background:#e8ebf0}
+.key.vog{background:#e8f0fe;color:#1a73e8}
+.key.vog:active{background:#d2e3fc}
+.key.sm{height:8.8vw;max-height:40px;font-size:12px}
+.key.num{color:#188038}
+.key.del{flex:1.7;background:#cfd6dd;color:#444746;font-size:19px}
+.key.del:active{background:#bcc5cd}
+.ksp{position:relative;overflow:hidden;flex:1;height:11.6vw;max-height:52px;border-radius:9px;
+  background:#fff;box-shadow:0 1px 0 rgba(0,0,0,.20),0 1px 3px rgba(0,0,0,.10);
+  color:#9aa0a6;font-size:11px;letter-spacing:2px;font-weight:600}
+.ksp:active{background:#e8ebf0}
+
+/* ripple + toast */
+.ripple{position:absolute;border-radius:50%;background:rgba(0,0,0,.14);transform:scale(0);
+  animation:rip .5s ease-out forwards;pointer-events:none}
+@keyframes rip{to{transform:scale(2.4);opacity:0}}
+#toast{position:fixed;left:50%;transform:translateX(-50%);
+  bottom:calc(16px + env(safe-area-inset-bottom));z-index:99;
+  background:#202124;color:#fff;font-size:12px;padding:12px 20px;border-radius:26px;
+  box-shadow:0 4px 14px rgba(0,0,0,.3);opacity:0;transition:opacity .25s;pointer-events:none;
+  max-width:88vw;text-align:center}
+#toast.on{opacity:1}
+</style>
+</head>
+<body>
+<div id="app">
+
+  <header id="bar">
+    <div id="logo">🎹</div>
+    <div><h1>Tecla Mágica</h1><small>digite • sílabas • ditado</small></div>
+    <div class="grow"></div>
+    <button class="chip" id="btnRit">1,0×</button>
+    <button class="icon" id="btnSom" aria-label="Som">🔊</button>
+  </header>
+
+  <!-- modos -->
+  <div id="modes">
+    <button class="mbtn on" id="mTec" data-m="teclado">⌨️ Teclado</button>
+    <button class="mbtn" id="mSil" data-m="silabas">🧩 Sílabas</button>
+    <button class="mbtn" id="mDit" data-m="ditado">🎧 Ditado</button>
+  </div>
+
+  <div id="views">
+
+    <!-- MODO TECLADO -->
+    <section id="vTeclado">
+      <div id="card">
+        <div id="meta">0 letras • 0 palavras</div>
+        <div id="disp"><div id="dispTxt"></div></div>
+      </div>
+      <div class="acts">
+        <button class="abtn tonal" id="btnClr">🗑 Limpar</button>
+        <button class="abtn blue" id="btnBk">⌫ Apagar</button>
+        <button class="abtn primary" id="btnAll">🔊 Falar tudo</button>
+      </div>
+    </section>
+
+    <!-- MODO SÍLABAS -->
+    <section id="vSilabas" class="hidden">
+      <div id="consRow"></div>
+      <div id="sylCards"></div>
+      <div class="acts">
+        <button class="abtn primary" id="btnFam">🔊 Ouvir família</button>
+      </div>
+    </section>
+
+    <!-- MODO DITADO -->
+    <section id="vDitado" class="hidden">
+      <div id="ditHud">
+        <button class="lchip on" id="lv0">Letras</button>
+        <button class="lchip" id="lv1">Sílabas</button>
+        <button class="lchip" id="lv2">Palavras</button>
+        <div class="grow"></div>
+        <div class="schip" id="ditHits">✅ 0</div>
+        <div class="schip" id="ditStreak">⭐ 0</div>
+      </div>
+      <div id="ditCard">
+        <div id="ditPrompt">Toque em 🔁 para ouvir<br>e digite o que ouviu</div>
+        <div id="ditBoxes"></div>
+        <div id="ditMsg"></div>
+      </div>
+      <div class="acts">
+        <button class="abtn blue" id="btnReplay">🔁 Ouvir de novo</button>
+        <button class="abtn tonal" id="btnReveal">👀 Ver resposta</button>
+      </div>
+    </section>
+  </div>
+
+  <div id="kb"></div>
+</div>
+
+<div id="toast"></div>
+
+<script>
+'use strict';
+/* ===== util ===== */
+function $(id){return document.getElementById(id);}
+var toastT=null;
+function toast(m){var t=$('toast');t.textContent=m;t.classList.add('on');
+ clearTimeout(toastT);toastT=setTimeout(function(){t.classList.remove('on');},3000);}
+window.addEventListener('error',function(e){toast('Erro: '+(e.message||'?'));});
+function escH(s){return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
+function rnd(n){return Math.floor(Math.random()*n);}
+function ripple(el,e){try{
+ var r=document.createElement('span');r.className='ripple';
+ var rect=el.getBoundingClientRect(),sz=Math.max(rect.width,rect.height)*1.2;
+ r.style.width=r.style.height=sz+'px';
+ r.style.left=((e.clientX||rect.left+rect.width/2)-rect.left-sz/2)+'px';
+ r.style.top=((e.clientY||rect.top+rect.height/2)-rect.top-sz/2)+'px';
+ el.appendChild(r);
+ setTimeout(function(){if(r.parentNode)r.parentNode.removeChild(r);},520);}catch(x){}}
+
+/* ===== sons curtos ===== */
+var AC=null,muted=false,rateMode=0;
+function ac(){try{
+ if(!AC){var A=window.AudioContext||window.webkitAudioContext;if(!A)return null;AC=new A();}
+ if(AC.state==='suspended')AC.resume();return AC;}catch(e){return null;}}
+function clickSnd(){if(muted)return;
+ try{var a=ac();if(!a)return;var t=a.currentTime,o=a.createOscillator(),g=a.createGain();
+ o.type='sine';o.frequency.value=560;
+ g.gain.setValueAtTime(.05,t);g.gain.exponentialRampToValueAtTime(.0001,t+.05);
+ o.connect(g);g.connect(a.destination);o.start(t);o.stop(t+.06);}catch(e){}}
+function okTone(){if(muted)return;
+ try{var a=ac();if(!a)return;var t=a.currentTime;
+ var fs=[660,880];
+ for(var i=0;i<2;i++){var o=a.createOscillator(),g=a.createGain();
+  o.type='sine';o.frequency.value=fs[i];
+  g.gain.setValueAtTime(.09,t+i*.09);g.gain.exponentialRampToValueAtTime(.0001,t+i*.09+.13);
+  o.connect(g);g.connect(a.destination);o.start(t+i*.09);o.stop(t+i*.09+.14);}}catch(e){}}
+function badTone(){if(muted)return;
+ try{var a=ac();if(!a)return;var t=a.currentTime,o=a.createOscillator(),g=a.createGain();
+ o.type='sine';o.frequency.setValueAtTime(220,t);
+ o.frequency.exponentialRampToValueAtTime(140,t+.2);
+ g.gain.setValueAtTime(.08,t);g.gain.exponentialRampToValueAtTime(.0001,t+.22);
+ o.connect(g);g.connect(a.destination);o.start(t);o.stop(t+.24);}catch(e){}}
+
+/* ===== voz pt-BR ===== */
+var VOZ=null,hasTTS=!!window.speechSynthesis;
+if(!hasTTS)toast('Este aparelho não possui síntese de voz.');
+function pickVoice(){try{if(!hasTTS)return;
+ var vs=speechSynthesis.getVoices(),i;
+ for(i=0;i<vs.length;i++){var l=(vs[i].lang||'').toLowerCase().replace('_','-');
+  if(l==='pt-br'){VOZ=vs[i];return;}}
+ for(i=0;i<vs.length;i++){if((vs[i].lang||'').toLowerCase().indexOf('pt')===0){VOZ=vs[i];return;}}
+ VOZ=null;}catch(e){}}
+if(hasTTS){pickVoice();try{speechSynthesis.onvoiceschanged=pickVoice;}catch(e){}}
+function rateVal(){return rateMode===0?0.95:0.62;}
+function speakRaw(txt){try{
+ if(!hasTTS||muted)return null;
+ speechSynthesis.cancel();
+ var u=new SpeechSynthesisUtterance(txt);
+ u.lang='pt-BR';if(VOZ)u.voice=VOZ;
+ u.rate=rateVal();u.pitch=1.05;u.volume=1;
+ speechSynthesis.speak(u);return u;}catch(e){return null;}}
+var NOMES={'A':'á','B':'bê','C':'cê','D':'dê','E':'é','F':'efe','G':'gê','H':'agá','I':'i',
+ 'J':'jota','K':'cá','L':'ele','M':'eme','N':'ene','O':'ó','P':'pê','Q':'quê','R':'erre',
+ 'S':'esse','T':'tê','U':'u','V':'vê','W':'dáblio','X':'xis','Y':'ípsilon','Z':'zê',' ':'espaço',
+ 'Á':'á','À':'á grave','Â':'â','Ã':'ã','É':'é','Ê':'ê','Í':'í','Ó':'ó','Ô':'ô','Õ':'õ','Ú':'ú','Ç':'cê cedilha'};
+var NUMS={'0':'zero','1':'um','2':'dois','3':'três','4':'quatro','5':'cinco',
+ '6':'seis','7':'sete','8':'oito','9':'nove'};
+function nomeDe(ch){var up=ch.toUpperCase();return NOMES[up]||NUMS[up]||ch;}
+
+/* ===== modos ===== */
+var MODE='teclado';
+function setMode(m){
+ MODE=m;
+ var bs=[$('mTec'),$('mSil'),$('mDit')];
+ for(var i=0;i<bs.length;i++)bs[i].classList.toggle('on',bs[i].getAttribute('data-m')===m);
+ $('vTeclado').classList.toggle('hidden',m!=='teclado');
+ $('vSilabas').classList.toggle('hidden',m!=='silabas');
+ $('vDitado').classList.toggle('hidden',m!=='ditado');
+ $('kb').style.display=(m==='silabas')?'none':'';
+ try{if(hasTTS)speechSynthesis.cancel();}catch(e){}
+ if(m==='silabas')renderSyl();
+ if(m==='ditado')newRound();}
+(function(){
+ var bs=[$('mTec'),$('mSil'),$('mDit')];
+ for(var i=0;i<bs.length;i++)(function(b){
+  b.addEventListener('pointerdown',function(e){
+   e.preventDefault();ripple(b,e);setMode(b.getAttribute('data-m'));});})(bs[i]);})();
+
+/* ===== MODO TECLADO (livre) ===== */
+var TXT='';
+function renderTxt(markLast){
+ var el=$('dispTxt'),h='';
+ if(!TXT){h='<span class="ph">Toque nas letras para ouvir…</span>';}
+ else{
+  for(var i=0;i<TXT.length;i++){
+   var ch=TXT[i],cl='',tx=escH(ch),up=ch.toUpperCase();
+   if(ch===' '){cl='cs';tx='␣';}
+   else if('0123456789'.indexOf(ch)>=0)cl='cn';
+   else if('AEIOUÁÀÂÃÉÊÍÓÔÕÚ'.indexOf(up)>=0)cl='cv';
+   h+='<span class="'+cl+'" data-i="'+i+'">'+tx+'</span>';}
+  h+='<span class="cur"></span>';}
+ el.innerHTML=h;
+ if(markLast&&TXT){var last=el.querySelector('span[data-i="'+(TXT.length-1)+'"]');
+  if(last)last.classList.add('new');}
+ var d=$('disp');d.scrollTop=d.scrollHeight;countMeta();}
+function countMeta(){
+ var w=TXT.trim()?TXT.trim().split(/\s+/).length:0;
+ $('meta').textContent=TXT.length+' letras • '+w+(w===1?' palavra':' palavras');}
+function addChar(ch){
+ if(TXT.length>=80){toast('Texto cheio (80 caracteres). Use Limpar.');return;}
+ TXT+=ch;renderTxt(true);speakRaw(nomeDe(ch));}
+function backspace(){if(!TXT)return;TXT=TXT.slice(0,-1);renderTxt(false);}
+function clearAll(){TXT='';renderTxt(false);
+ try{if(hasTTS)speechSynthesis.cancel();}catch(e){}}
+function hlAt(i){
+ var sp=document.querySelectorAll('#dispTxt span'),k;
+ for(k=0;k<sp.length;k++)sp[k].classList.remove('hl');
+ var j=i;
+ while(j<TXT.length&&TXT[j]!==' '){
+  var s2=document.querySelector('#dispTxt span[data-i="'+j+'"]');
+  if(s2)s2.classList.add('hl');j++;}}
+function clearHl(){var sp=document.querySelectorAll('#dispTxt span');
+ for(var k=0;k<sp.length;k++)sp[k].classList.remove('hl');}
+function speakAll(){
+ if(!TXT){speakRaw('Você ainda não digitou nada.');return;}
+ var u=speakRaw(TXT);
+ if(u){try{
+  u.onboundary=function(e){if(typeof e.charIndex==='number')hlAt(e.charIndex);};
+  u.onend=clearHl;u.onerror=clearHl;}catch(e){}}}
+
+/* ===== MODO SÍLABAS ===== */
+var VOG=['A','E','I','O','U'];
+var CONS=['B','C','D','F','G','J','L','M','N','P','R','S','T','V','Z'];
+var SYL={cur:'B'};
+function isVogSel(){return VOG.indexOf(SYL.cur)>=0;}
+function buildCons(){
+ var row=$('consRow'),i,b;
+ var all=VOG.concat(CONS);
+ for(i=0;i<all.length;i++){
+  b=document.createElement('button');
+  b.className='cchip'+(VOG.indexOf(all[i])>=0?' vogc':'');
+  b.textContent=all[i];
+  (function(x,btn){
+   btn.addEventListener('pointerdown',function(e){
+    e.preventDefault();ripple(btn,e);clickSnd();
+    SYL.cur=x;refreshCons();renderSyl();});})(all[i],b);
+  row.appendChild(b);}
+ refreshCons();}
+function refreshCons(){
+ var cs=$('consRow').children;
+ for(var i=0;i<cs.length;i++)
+  cs[i].classList.toggle('on',cs[i].textContent===SYL.cur);}
+function renderSyl(){
+ var box=$('sylCards'),h='',i;
+ if(isVogSel()){
+  h='<button class="syl solo" data-s="'+SYL.cur+'"><span class="cB">'+SYL.cur+'</span></button>';}
+ else{
+  for(i=0;i<VOG.length;i++)
+   h+='<button class="syl" data-s="'+SYL.cur+VOG[i]+'"><span class="cA">'+SYL.cur+'</span><span class="cB">'+VOG[i]+'</span></button>';}
+ box.innerHTML=h;
+ var cs=box.querySelectorAll('.syl');
+ for(i=0;i<cs.length;i++)(function(c){
+  c.addEventListener('pointerdown',function(e){
+   e.preventDefault();ripple(c,e);clickSnd();
+   speakRaw(c.getAttribute('data-s'));});})(cs[i]);}
+var famToken=0;
+function speakFamily(){
+ famToken++;var my=famToken;
+ try{if(hasTTS)speechSynthesis.cancel();}catch(e){}
+ if(isVogSel()){speakRaw(SYL.cur);return;}
+ var cards=$('sylCards').querySelectorAll('.syl'),i=0;
+ (function next(){
+  if(MODE!=='silabas'||my!==famToken)return;
+  if(i>=cards.length){for(var k=0;k<cards.length;k++)cards[k].classList.remove('on');return;}
+  for(var k=0;k<cards.length;k++)cards[k].classList.remove('on');
+  cards[i].classList.add('on');
+  speakRaw(cards[i].getAttribute('data-s'));
+  i++;setTimeout(next,950);})();}
+
+/* ===== MODO DITADO ===== */
+var WORDS=['BOLA','CASA','GATO','PATO','SAPO','LUA','SOL','MAR','FLOR','PEIXE','CAVALO',
+ 'JANELA','MENINO','ESCOLA','BANANA','MACACO','SAPATO','PIPOCA','CACHORRO','GIRAFA',
+ 'ABACAXI','BORBOLETA'];
+var PRAISE=['Muito bem!','Isso!','Parabéns!','Excelente!','Você acertou!','Que ótimo!'];
+var DIT={lv:0,target:'',pos:0,hits:0,streak:0,locked:false};
+function pickTarget(){
+ if(DIT.lv===0)return String.fromCharCode(65+rnd(26));
+ if(DIT.lv===1)return CONS[rnd(CONS.length)]+VOG[rnd(VOG.length)];
+ return WORDS[rnd(WORDS.length)];}
+function setMsg(t,c){var m=$('ditMsg');m.textContent=t;m.style.color=c||'#5f6368';}
+function updDitHud(){$('ditHits').textContent='✅ '+DIT.hits;$('ditStreak').textContent='⭐ '+DIT.streak;}
+function renderBoxes(){
+ var h='';
+ for(var i=0;i<DIT.target.length;i++)h+='<div class="dbox" id="db'+i+'"></div>';
+ $('ditBoxes').innerHTML=h;}
+function newRound(){
+ DIT.target=pickTarget();DIT.pos=0;DIT.locked=false;
+ renderBoxes();
+ setMsg('Ouça com atenção… 👂','#5f6368');
+ setTimeout(function(){if(MODE==='ditado')speakRaw(DIT.target.toLowerCase());},350);}
+function ditKey(ch){
+ if(DIT.locked)return;
+ var exp=DIT.target[DIT.pos],box=$('db'+DIT.pos);
+ if(!box)return;
+ if(ch===exp){
+  box.textContent=ch;box.className='dbox fill';clickSnd();
+  DIT.pos++;
+  if(DIT.pos>=DIT.target.length)winRound();}
+ else{
+  box.textContent=ch;box.className='dbox bad';badTone();
+  DIT.streak=0;updDitHud();
+  setMsg('Ops! Tente outra vez 💪','#d93025');
+  setTimeout(function(){box.textContent='';box.className='dbox';},420);}}
+function winRound(){
+ DIT.locked=true;DIT.hits++;DIT.streak++;updDitHud();okTone();
+ for(var i=0;i<DIT.target.length;i++){var b=$('db'+i);if(b)b.className='dbox win';}
+ var pr=PRAISE[rnd(PRAISE.length)];
+ setMsg('✅ '+pr,'#188038');
+ setTimeout(function(){speakRaw(pr);},250);
+ setTimeout(function(){if(MODE==='ditado')newRound();},1600);}
+function reveal(){
+ if(DIT.locked)return;
+ DIT.locked=true;DIT.streak=0;updDitHud();
+ for(var i=0;i<DIT.target.length;i++){var b=$('db'+i);
+  if(b){b.textContent=DIT.target[i];b.className='dbox rev';}}
+ setMsg('Era: '+DIT.target,'#b06000');
+ speakRaw(DIT.target.toLowerCase());
+ setTimeout(function(){if(MODE==='ditado')newRound();},2000);}
+function ditBack(){
+ if(DIT.locked||DIT.pos<=0)return;
+ DIT.pos--;var b=$('db'+DIT.pos);
+ if(b){b.textContent='';b.className='dbox';}}
+(function(){
+ var lvs=[$('lv0'),$('lv1'),$('lv2')];
+ for(var i=0;i<3;i++)(function(idx,btn){
+  btn.addEventListener('pointerdown',function(e){
+   e.preventDefault();ripple(btn,e);
+   DIT.lv=idx;
+   for(var k=0;k<3;k++)lvs[k].classList.toggle('on',k===idx);
+   if(MODE==='ditado')newRound();});})(i,lvs[i]);})();
+
+/* ===== TECLADO NA TELA ===== */
+function pressKey(ch){
+ clickSnd();
+ if(MODE==='ditado'){
+  if(ch==='⌫')ditBack();
+  else if(/^[A-Za-z]$/.test(ch))ditKey(ch.toUpperCase());
+  return;}
+ if(MODE==='silabas')return;
+ if(ch==='⌫'){backspace();return;}
+ addChar(ch);}
+function bindKey(b,ch){
+ b.addEventListener('pointerdown',function(e){
+  e.preventDefault();ripple(b,e);pressKey(ch);});}
+function addRow(keys,cls){
+ var kb=$('kb'),row=document.createElement('div');row.className='krow';
+ for(var i=0;i<keys.length;i++){
+  var ch=keys[i],b=document.createElement('button'),extra='';
+  if(cls==='num')extra=' sm num';
+  else if(cls==='acc')extra=' sm';
+  else if('AEIOU'.indexOf(ch)>=0)extra=' vog';
+  if(ch==='⌫')extra=' del';
+  b.className='key'+extra;b.textContent=ch;
+  bindKey(b,ch);row.appendChild(b);}
+ kb.appendChild(row);}
+function buildKb(){
+ addRow(['1','2','3','4','5','6','7','8','9','0'],'num');
+ addRow(['Á','À','Â','Ã','É','Ê','Í','Ó','Ô','Õ','Ú','Ç'],'acc');
+ addRow(['Q','W','E','R','T','Y','U','I','O','P'],'');
+ addRow(['A','S','D','F','G','H','J','K','L'],'');
+ addRow(['Z','X','C','V','B','N','M','⌫'],'');
+ var kb=$('kb'),row=document.createElement('div');row.className='krow';
+ var sp=document.createElement('button');sp.className='ksp';sp.textContent='espaço';
+ sp.addEventListener('pointerdown',function(e){
+  e.preventDefault();ripple(sp,e);pressKey(' ');});
+ row.appendChild(sp);kb.appendChild(row);}
+
+/* teclado físico */
+document.addEventListener('keydown',function(e){
+ if(e.ctrlKey||e.metaKey||e.altKey)return;
+ if(MODE==='ditado'){
+  if(e.key==='Backspace'){e.preventDefault();ditBack();return;}
+  if(e.key==='Enter'){e.preventDefault();speakRaw(DIT.target.toLowerCase());return;}
+  if(e.key&&/^[a-zA-Z]$/.test(e.key)){e.preventDefault();clickSnd();ditKey(e.key.toUpperCase());}
+  return;}
+ if(MODE==='silabas')return;
+ if(e.key==='Backspace'){e.preventDefault();clickSnd();backspace();return;}
+ if(e.key==='Enter'){e.preventDefault();speakAll();return;}
+ if(e.key&&e.key.length===1){e.preventDefault();clickSnd();addChar(e.key);}});
+
+/* ===== botões gerais ===== */
+function bindBtn(el,fn){
+ el.addEventListener('pointerdown',function(e){e.preventDefault();ripple(el,e);fn();});}
+bindBtn($('btnAll'),speakAll);
+bindBtn($('btnBk'),backspace);
+bindBtn($('btnClr'),clearAll);
+bindBtn($('btnFam'),speakFamily);
+bindBtn($('btnReplay'),function(){if(MODE==='ditado')speakRaw(DIT.target.toLowerCase());});
+bindBtn($('btnReveal'),reveal);
+bindBtn($('btnSom'),function(){
+ muted=!muted;
+ try{if(hasTTS&&muted)speechSynthesis.cancel();}catch(e){}
+ $('btnSom').textContent=muted?'🔇':'🔊';
+ toast(muted?'Voz desligada':'Voz ligada');});
+bindBtn($('btnRit'),function(){
+ rateMode=rateMode===0?1:0;
+ $('btnRit').textContent=rateMode===0?'1,0×':'0,6×';
+ toast(rateMode===0?'Ritmo normal':'Ritmo lento');});
+document.addEventListener('visibilitychange',function(){
+ if(document.hidden){try{if(hasTTS)speechSynthesis.cancel();}catch(e){}}});
+function fullScreen(){try{var el=document.documentElement;
+ if(el.requestFullscreen)el.requestFullscreen();
+ else if(el.webkitRequestFullscreen)el.webkitRequestFullscreen();}catch(e){}}
+window.addEventListener('load',fullScreen);
+document.addEventListener('pointerdown',function fs(){
+ fullScreen();document.removeEventListener('pointerdown',fs);});
+
+/* ===== boot ===== */
+try{
+ buildKb();buildCons();renderTxt(false);updDitHud();renderBoxesSafe();
+ function renderBoxesSafe(){$('ditBoxes').innerHTML='';}
+}catch(err){toast('Erro ao iniciar: '+err.message);}
+</script>
+</body>
+</html>

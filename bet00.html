@@ -1,0 +1,979 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+  <title>Bet Slot Machine Classic</title>
+  <style>
+    :root {
+      --bg-dark: #0a0c16;
+      --card-bg: #151828;
+      --accent-gold: #ffcc00;
+      --accent-blue: #0038a8;
+      --accent-green: #10b981;
+      --text-main: #f3f4f6;
+      --text-muted: #9ca3af;
+      --border-color: #272a3e;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    html, body {
+      width: 100%;
+      height: 100%;
+      height: 100dvh;
+      overflow: hidden;
+      background: radial-gradient(circle at center, #1a1e36 0%, var(--bg-dark) 100%);
+      color: var(--text-main);
+    }
+
+    body {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+    }
+
+    #celebrationCanvas {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100vw;
+      height: 100vh;
+      pointer-events: none;
+      z-index: 9999;
+    }
+
+    .container {
+      background: var(--card-bg);
+      width: 100%;
+      height: 100%;
+      height: 100dvh;
+      padding: 16px 20px;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      position: relative;
+      z-index: 10;
+      box-shadow: 0 0 30px rgba(0, 0, 0, 0.8);
+    }
+
+    .shake {
+      animation: shake 0.5s cubic-bezier(.36,.07,.19,.97) both;
+    }
+
+    @keyframes shake {
+      10%, 90% { transform: translate3d(-2px, 0, 0); }
+      20%, 80% { transform: translate3d(4px, 0, 0); }
+      30%, 50%, 70% { transform: translate3d(-8px, 0, 0); }
+      40%, 60% { transform: translate3d(8px, 0, 0); }
+    }
+
+    .header-actions {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .btn-icon {
+      background: rgba(255, 255, 255, 0.08);
+      border: 1px solid var(--border-color);
+      color: var(--text-main);
+      border-radius: 50%;
+      width: 44px;
+      height: 44px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.2rem;
+      transition: all 0.2s;
+    }
+
+    .btn-icon:active {
+      background: rgba(255, 204, 0, 0.2);
+      border-color: var(--accent-gold);
+    }
+
+    h1 {
+      color: var(--accent-gold);
+      font-size: 1.6rem;
+      font-weight: 900;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      margin-top: 4px;
+      text-align: center;
+    }
+
+    .bet-display {
+      font-size: 0.95rem;
+      font-weight: 700;
+      color: var(--accent-green);
+      background: rgba(16, 185, 129, 0.12);
+      border: 1px solid rgba(16, 185, 129, 0.3);
+      padding: 6px 16px;
+      border-radius: 20px;
+      display: inline-block;
+      margin: 6px auto 0 auto;
+      text-align: center;
+    }
+
+    /* Botão para abrir o Popup de Fotos */
+    .photo-popup-btn {
+      background: rgba(255, 204, 0, 0.1);
+      border: 2px dashed var(--accent-gold);
+      border-radius: 14px;
+      padding: 10px 14px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+      cursor: pointer;
+      color: var(--accent-gold);
+      font-weight: 700;
+      font-size: 0.9rem;
+      transition: background 0.2s;
+    }
+
+    .photo-popup-btn:active {
+      background: rgba(255, 204, 0, 0.25);
+    }
+
+    .slot-machine {
+      display: flex;
+      justify-content: space-between;
+      gap: 8px;
+      background: #06070c;
+      padding: 14px 10px;
+      border-radius: 18px;
+      border: 1px solid var(--border-color);
+      flex-grow: 0.2;
+      align-items: center;
+    }
+
+    .reel {
+      flex: 1;
+      height: 100%;
+      max-height: 140px;
+      min-height: 100px;
+      background: #ffffff;
+      border-radius: 12px;
+      border: 3px solid var(--accent-blue);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 3.2rem;
+      box-shadow: inset 0 0 15px rgba(0,0,0,0.3);
+      overflow: hidden;
+      user-select: none;
+    }
+
+    .reel img {
+      width: 75%;
+      height: 75%;
+      object-fit: cover;
+      border-radius: 8px;
+    }
+
+    .spinning {
+      animation: reelBlur 0.08s infinite linear;
+    }
+
+    @keyframes reelBlur {
+      0% { transform: translateY(-8px); filter: blur(2px); }
+      50% { transform: translateY(8px); filter: blur(4px); }
+      100% { transform: translateY(-8px); filter: blur(2px); }
+    }
+
+    .btn-spin {
+      background: linear-gradient(180deg, #ffdd33, #ffcc00);
+      color: #000;
+      border: none;
+      padding: 16px;
+      font-size: 1.35rem;
+      font-weight: 900;
+      border-radius: 50px;
+      cursor: pointer;
+      box-shadow: 0 6px 0 #b38f00, 0 10px 20px rgba(0,0,0,0.4);
+      transition: all 0.1s ease;
+      text-transform: uppercase;
+      width: 100%;
+    }
+
+    .btn-spin:active {
+      transform: translateY(4px);
+      box-shadow: 0 2px 0 #b38f00, 0 5px 10px rgba(0,0,0,0.3);
+    }
+
+    .btn-spin:disabled {
+      background: #4b5563;
+      box-shadow: 0 6px 0 #374151;
+      color: #9ca3af;
+      cursor: not-allowed;
+    }
+
+    .message {
+      font-size: 1.05rem;
+      font-weight: 800;
+      min-height: 44px;
+      color: var(--accent-gold);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      padding: 0 10px;
+    }
+
+    .win-jackpot {
+      color: var(--accent-gold);
+      font-size: 1.15rem;
+      animation: pulse 0.5s infinite alternate;
+    }
+
+    .win-normal {
+      color: var(--accent-green);
+      font-size: 1.15rem;
+      animation: pulse 0.5s infinite alternate;
+    }
+
+    @keyframes pulse {
+      from { transform: scale(1); }
+      to { transform: scale(1.05); }
+    }
+
+    .footer-stats {
+      padding-top: 12px;
+      border-top: 1px solid var(--border-color);
+      display: flex;
+      justify-content: space-around;
+      font-size: 0.85rem;
+      color: var(--text-muted);
+      text-align: center;
+    }
+
+    .stat-item {
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+    }
+
+    .stat-value {
+      font-size: 1.15rem;
+      font-weight: 800;
+      color: var(--accent-gold);
+    }
+
+    /* Modais (Admin & Fotos) */
+    .modal-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100vw;
+      height: 100vh;
+      background: rgba(0, 0, 0, 0.85);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 1000;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.3s ease;
+      padding: 20px;
+    }
+
+    .modal-overlay.active {
+      opacity: 1;
+      pointer-events: auto;
+    }
+
+    .modal-content {
+      background: var(--card-bg);
+      border: 1px solid var(--border-color);
+      border-radius: 16px;
+      padding: 20px;
+      width: 100%;
+      max-width: 360px;
+      text-align: left;
+    }
+
+    .modal-content h2 {
+      color: var(--accent-gold);
+      font-size: 1.2rem;
+      margin-bottom: 12px;
+      text-align: center;
+      border-bottom: 1px solid var(--border-color);
+      padding-bottom: 8px;
+    }
+
+    .form-group {
+      margin-bottom: 12px;
+    }
+
+    .form-group label {
+      display: block;
+      font-size: 0.8rem;
+      color: var(--text-muted);
+      margin-bottom: 4px;
+    }
+
+    .form-group input {
+      width: 100%;
+      padding: 10px;
+      border-radius: 8px;
+      border: 1px solid var(--border-color);
+      background: #090a10;
+      color: #fff;
+      font-size: 0.95rem;
+    }
+
+    .modal-actions {
+      display: flex;
+      gap: 10px;
+      margin-top: 16px;
+    }
+
+    .btn-modal {
+      flex: 1;
+      padding: 10px;
+      border-radius: 8px;
+      border: none;
+      font-weight: 700;
+      cursor: pointer;
+    }
+
+    .btn-confirm { background: var(--accent-blue); color: #fff; }
+    .btn-cancel { background: #dc2626; color: #fff; }
+
+    .admin-error {
+      color: #ef4444;
+      font-size: 0.8rem;
+      margin-top: 4px;
+      display: none;
+    }
+
+    /* Lista de Slots de Fotos no Modal */
+    .photo-slots-container {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      margin-top: 10px;
+    }
+
+    .photo-slot {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      background: #090a10;
+      padding: 8px 12px;
+      border-radius: 10px;
+      border: 1px solid var(--border-color);
+    }
+
+    .photo-slot-preview {
+      width: 40px;
+      height: 40px;
+      border-radius: 6px;
+      object-fit: cover;
+      background: #1f2338;
+      border: 1px solid var(--border-color);
+    }
+
+    .btn-photo-action {
+      background: var(--accent-blue);
+      color: white;
+      border: none;
+      padding: 6px 12px;
+      border-radius: 6px;
+      font-size: 0.8rem;
+      font-weight: 700;
+      cursor: pointer;
+    }
+
+    .btn-photo-remove {
+      background: #dc2626;
+    }
+  </style>
+</head>
+<body>
+
+  <canvas id="celebrationCanvas"></canvas>
+
+  <div class="container" id="gameContainer">
+    <div>
+      <div class="header-actions">
+        <button class="btn-icon" title="Painel Admin" onclick="openAdminModal()">⚙️</button>
+        <button class="btn-icon" id="audioToggle" onclick="toggleAudio()" title="Som">🔊</button>
+      </div>
+
+      <h1>BET - AZAR O SEU</h1>
+      <div style="text-align: center;">
+        <div class="bet-display" id="betDisplay">Aposta: R$ 5,00</div>
+      </div>
+    </div>
+
+    <!-- Botão de Acesso ao Popup de Fotos -->
+    <button class="photo-popup-btn" onclick="openPhotoModal()">
+      🖼️ Gerenciar Fotos dos Prêmios (<span id="photoCountText">0/3</span>)
+    </button>
+
+    <!-- Roletas -->
+    <div class="slot-machine">
+      <div class="reel" id="reel1">🎰</div>
+      <div class="reel" id="reel2">🎰</div>
+      <div class="reel" id="reel3">🎰</div>
+    </div>
+
+    <div>
+      <button class="btn-spin" id="spinBtn" onclick="spin()">GIRAR</button>
+      <div class="message" id="message">Clique em GIRAR para jogar!</div>
+    </div>
+
+    <div class="footer-stats">
+      <div class="stat-item">
+        <span>Rodadas</span>
+        <span class="stat-value" id="totalSpinsStat">0</span>
+      </div>
+      <div class="stat-item">
+        <span>Vitórias</span>
+        <span class="stat-value" id="winsStat">0</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Popup Modal de Upload de Fotos (Até 3) -->
+  <div class="modal-overlay" id="photoModal">
+    <div class="modal-content">
+      <h2>Anexar Fotos dos Prêmios</h2>
+      <p style="font-size: 0.8rem; color: var(--text-muted); text-align: center; margin-bottom: 10px;">
+        Adicione até 3 imagens customizadas para juntar aos símbolos de emojis.
+      </p>
+
+      <div class="photo-slots-container">
+        <!-- Foto 1 -->
+        <div class="photo-slot">
+          <img id="prev1" class="photo-slot-preview" alt="Foto 1">
+          <span style="font-size: 0.85rem; color: var(--text-main);">Foto #1</span>
+          <button class="btn-photo-action" onclick="triggerInput(1)" id="btnSlot1">Adicionar</button>
+          <input type="file" id="file1" accept="image/*" style="display:none;" onchange="handleFileSelect(1, event)">
+        </div>
+
+        <!-- Foto 2 -->
+        <div class="photo-slot">
+          <img id="prev2" class="photo-slot-preview" alt="Foto 2">
+          <span style="font-size: 0.85rem; color: var(--text-main);">Foto #2</span>
+          <button class="btn-photo-action" onclick="triggerInput(2)" id="btnSlot2">Adicionar</button>
+          <input type="file" id="file2" accept="image/*" style="display:none;" onchange="handleFileSelect(2, event)">
+        </div>
+
+        <!-- Foto 3 -->
+        <div class="photo-slot">
+          <img id="prev3" class="photo-slot-preview" alt="Foto 3">
+          <span style="font-size: 0.85rem; color: var(--text-main);">Foto #3</span>
+          <button class="btn-photo-action" onclick="triggerInput(3)" id="btnSlot3">Adicionar</button>
+          <input type="file" id="file3" accept="image/*" style="display:none;" onchange="handleFileSelect(3, event)">
+        </div>
+      </div>
+
+      <div class="modal-actions">
+        <button class="btn-modal btn-confirm" onclick="closePhotoModal()">Concluir</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal Admin -->
+  <div class="modal-overlay" id="adminModal">
+    <div class="modal-content">
+      <h2>Painel Administrativo</h2>
+      
+      <div id="authStep">
+        <div class="form-group">
+          <label for="adminPass">Senha de Acesso:</label>
+          <input type="password" id="adminPass" placeholder="Senha (padrão: 123)">
+          <div class="admin-error" id="authError">Senha incorreta!</div>
+        </div>
+        <div class="modal-actions">
+          <button class="btn-modal btn-confirm" onclick="authenticateAdmin()">Entrar</button>
+          <button class="btn-modal btn-cancel" onclick="closeAdminModal()">Cancelar</button>
+        </div>
+      </div>
+
+      <div id="configStep" style="display: none;">
+        <div class="form-group">
+          <label for="inputBetValue">Valor da Aposta (R$):</label>
+          <input type="number" id="inputBetValue" step="0.5" min="0.5">
+        </div>
+        <div class="form-group">
+          <label for="inputWinInterval">Intervalo do Ciclo (Jogadas):</label>
+          <input type="number" id="inputWinInterval" min="1">
+        </div>
+        <div class="form-group">
+          <label for="inputWinsPerCycle">Vitórias por Ciclo:</label>
+          <input type="number" id="inputWinsPerCycle" min="1">
+        </div>
+        <div class="modal-actions">
+          <button class="btn-modal btn-confirm" onclick="saveAdminConfigs()">Salvar</button>
+          <button class="btn-modal btn-cancel" onclick="closeAdminModal()">Fechar</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const emojiSymbols = [
+      { id: 'moeda', type: 'emoji', value: '🪙' },
+      { id: 'trofeu', type: 'emoji', value: '🏆' },
+      { id: 'diamante', type: 'emoji', value: '💎' },
+      { id: 'sete', type: 'emoji', value: '7️⃣' },
+      { id: 'saco', type: 'emoji', value: '💰' },
+      { id: 'coroa', type: 'emoji', value: '👑' },
+      { id: 'estrela', type: 'emoji', value: '⭐' }
+    ];
+
+    // Array com suporte a até 3 fotos personalizadas
+    let customPhotos = [null, null, null];
+
+    const reel1 = document.getElementById('reel1');
+    const reel2 = document.getElementById('reel2');
+    const reel3 = document.getElementById('reel3');
+    const spinBtn = document.getElementById('spinBtn');
+    const message = document.getElementById('message');
+    const audioToggle = document.getElementById('audioToggle');
+    const gameContainer = document.getElementById('gameContainer');
+    const betDisplay = document.getElementById('betDisplay');
+    const totalSpinsStat = document.getElementById('totalSpinsStat');
+    const winsStat = document.getElementById('winsStat');
+
+    const photoModal = document.getElementById('photoModal');
+    const adminModal = document.getElementById('adminModal');
+    const authStep = document.getElementById('authStep');
+    const configStep = document.getElementById('configStep');
+    const adminPassInput = document.getElementById('adminPass');
+    const authError = document.getElementById('authError');
+    const inputBetValue = document.getElementById('inputBetValue');
+    const inputWinInterval = document.getElementById('inputWinInterval');
+    const inputWinsPerCycle = document.getElementById('inputWinsPerCycle');
+
+    let adminAuthenticated = false;
+    let betValue = 5.00;
+    let winInterval = 10;
+    let winsPerCycle = 1;
+    let winningSpinsInCycle = [];
+
+    let totalSpins = 0;
+    let totalWins = 0;
+
+    let soundEnabled = true;
+    let audioCtx = null;
+
+    generateWinningSpinsForCycle();
+    renderSymbol(reel1, emojiSymbols[0]);
+    renderSymbol(reel2, emojiSymbols[1]);
+    renderSymbol(reel3, emojiSymbols[2]);
+
+    /* Funções do Popup de Fotos */
+    function openPhotoModal() { photoModal.classList.add('active'); }
+    function closePhotoModal() { photoModal.classList.remove('active'); }
+
+    function triggerInput(index) {
+      if (customPhotos[index - 1]) {
+        // Se já tem foto, o botão serve para remover
+        customPhotos[index - 1] = null;
+        document.getElementById(`prev${index}`).src = '';
+        const btn = document.getElementById(`btnSlot${index}`);
+        btn.textContent = 'Adicionar';
+        btn.classList.remove('btn-photo-remove');
+        updatePhotoCount();
+      } else {
+        document.getElementById(`file${index}`).click();
+      }
+    }
+
+    function handleFileSelect(index, event) {
+      const file = event.target.files[0];
+      if (file) {
+        const reader = new FileReader();
+        reader.onload = function(evt) {
+          customPhotos[index - 1] = {
+            id: `custom_${index}`,
+            type: 'image',
+            value: evt.target.result,
+            label: `FOTO #${index}`
+          };
+          document.getElementById(`prev${index}`).src = evt.target.result;
+          const btn = document.getElementById(`btnSlot${index}`);
+          btn.textContent = 'Remover';
+          btn.classList.add('btn-photo-remove');
+          updatePhotoCount();
+        };
+        reader.readAsDataURL(file);
+      }
+    }
+
+    function updatePhotoCount() {
+      const count = customPhotos.filter(p => p !== null).length;
+      document.getElementById('photoCountText').textContent = `${count}/3`;
+    }
+
+    function getActiveSymbols() {
+      const symbols = [...emojiSymbols];
+      customPhotos.forEach(p => {
+        if (p !== null) symbols.push(p);
+      });
+      return symbols;
+    }
+
+    function renderSymbol(reelElem, symbol) {
+      if (symbol.type === 'image') {
+        reelElem.innerHTML = `<img src="${symbol.value}" alt="Foto">`;
+      } else {
+        reelElem.innerText = symbol.value;
+      }
+    }
+
+    function updateUI() {
+      betDisplay.innerText = `Aposta: R$ ${betValue.toFixed(2).replace('.', ',')}`;
+      totalSpinsStat.innerText = totalSpins;
+      winsStat.innerText = totalWins;
+    }
+
+    function generateWinningSpinsForCycle() {
+      winningSpinsInCycle = [];
+      const safeWins = Math.min(winsPerCycle, winInterval);
+      const possibleIndices = Array.from({length: winInterval}, (_, i) => i + 1);
+      
+      for (let i = possibleIndices.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [possibleIndices[i], possibleIndices[j]] = [possibleIndices[j], possibleIndices[i]];
+      }
+
+      winningSpinsInCycle = possibleIndices.slice(0, safeWins);
+    }
+
+    function openAdminModal() {
+      adminModal.classList.add('active');
+      authError.style.display = 'none';
+      adminPassInput.value = '';
+
+      if (adminAuthenticated) {
+        showConfigStep();
+      } else {
+        authStep.style.display = 'block';
+        configStep.style.display = 'none';
+        adminPassInput.focus();
+      }
+    }
+
+    function closeAdminModal() { adminModal.classList.remove('active'); }
+
+    function authenticateAdmin() {
+      if (adminPassInput.value === '123') {
+        adminAuthenticated = true;
+        authError.style.display = 'none';
+        showConfigStep();
+      } else {
+        authError.style.display = 'block';
+      }
+    }
+
+    function showConfigStep() {
+      authStep.style.display = 'none';
+      configStep.style.display = 'block';
+      inputBetValue.value = betValue;
+      inputWinInterval.value = winInterval;
+      inputWinsPerCycle.value = winsPerCycle;
+    }
+
+    function saveAdminConfigs() {
+      const newBet = parseFloat(inputBetValue.value);
+      const newInterval = parseInt(inputWinInterval.value);
+      const newWins = parseInt(inputWinsPerCycle.value);
+
+      if (!isNaN(newBet) && newBet > 0) betValue = newBet;
+      if (!isNaN(newInterval) && newInterval >= 1) winInterval = newInterval;
+      if (!isNaN(newWins) && newWins >= 1) winsPerCycle = Math.min(newWins, winInterval);
+
+      generateWinningSpinsForCycle();
+      updateUI();
+      closeAdminModal();
+    }
+
+    function initAudio() {
+      if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+      if (audioCtx.state === 'suspended') audioCtx.resume();
+    }
+
+    function toggleAudio() {
+      soundEnabled = !soundEnabled;
+      audioToggle.innerText = soundEnabled ? '🔊' : '🔇';
+    }
+
+    function playSound(type) {
+      if (!soundEnabled || !audioCtx) return;
+
+      const now = audioCtx.currentTime;
+
+      if (type === 'tick') {
+        const bufferSize = audioCtx.sampleRate * 0.015;
+        const buffer = audioCtx.createBuffer(1, bufferSize, audioCtx.sampleRate);
+        const data = buffer.getChannelData(0);
+        for (let i = 0; i < bufferSize; i++) {
+          data[i] = (Math.random() * 2 - 1) * Math.exp(-i / (bufferSize * 0.3));
+        }
+
+        const noise = audioCtx.createBufferSource();
+        noise.buffer = buffer;
+
+        const filter = audioCtx.createBiquadFilter();
+        filter.type = 'bandpass';
+        filter.frequency.setValueAtTime(1200, now);
+
+        const gain = audioCtx.createGain();
+        gain.gain.setValueAtTime(0.08, now);
+
+        noise.connect(filter);
+        filter.connect(gain);
+        gain.connect(audioCtx.destination);
+
+        noise.start(now);
+      } else if (type === 'stop') {
+        const osc = audioCtx.createOscillator();
+        const gain = audioCtx.createGain();
+
+        osc.type = 'sine';
+        osc.frequency.setValueAtTime(160, now);
+        osc.frequency.exponentialRampToValueAtTime(40, now + 0.06);
+
+        gain.gain.setValueAtTime(0.25, now);
+        gain.gain.exponentialRampToValueAtTime(0.01, now + 0.06);
+
+        osc.connect(gain);
+        gain.connect(audioCtx.destination);
+
+        osc.start(now);
+        osc.stop(now + 0.06);
+      } else if (type === 'win_normal') {
+        const notes = [523.25, 659.25, 783.99];
+        notes.forEach((freq, idx) => {
+          const osc = audioCtx.createOscillator();
+          const gain = audioCtx.createGain();
+          osc.type = 'triangle';
+          osc.frequency.setValueAtTime(freq, now + (idx * 0.12));
+          gain.gain.setValueAtTime(0.18, now + (idx * 0.12));
+          gain.gain.exponentialRampToValueAtTime(0.01, now + (idx * 0.12) + 0.25);
+          osc.connect(gain);
+          gain.connect(audioCtx.destination);
+          osc.start(now + (idx * 0.12));
+          osc.stop(now + (idx * 0.12) + 0.25);
+        });
+      } else if (type === 'win_jackpot') {
+        const notes = [523.25, 659.25, 783.99, 1046.50, 1318.51];
+        notes.forEach((freq, idx) => {
+          const osc = audioCtx.createOscillator();
+          const gain = audioCtx.createGain();
+          osc.type = 'sine';
+          osc.frequency.setValueAtTime(freq, now + (idx * 0.1));
+          gain.gain.setValueAtTime(0.25, now + (idx * 0.1));
+          gain.gain.exponentialRampToValueAtTime(0.01, now + (idx * 0.1) + 0.35);
+          osc.connect(gain);
+          gain.connect(audioCtx.destination);
+          osc.start(now + (idx * 0.1));
+          osc.stop(now + (idx * 0.1) + 0.35);
+        });
+      }
+    }
+
+    function spin() {
+      initAudio();
+
+      totalSpins++;
+      updateUI();
+
+      spinBtn.disabled = true;
+      message.className = 'message';
+      message.innerText = 'Girando... Boa sorte!';
+
+      reel1.classList.add('spinning');
+      reel2.classList.add('spinning');
+      reel3.classList.add('spinning');
+
+      const currentCycleIndex = ((totalSpins - 1) % winInterval) + 1;
+      if (currentCycleIndex === 1 && totalSpins > 1) generateWinningSpinsForCycle();
+
+      const shouldWin = winningSpinsInCycle.includes(currentCycleIndex);
+      const activeSymbols = getActiveSymbols();
+
+      let final1, final2, final3;
+
+      if (shouldWin) {
+        const customAvailable = activeSymbols.filter(s => s.type === 'image');
+        let winningSymbol;
+
+        // Se houverem fotos anexadas, aumenta a chance de sair uma delas no prêmio
+        if (customAvailable.length > 0 && Math.random() < 0.6) {
+          winningSymbol = customAvailable[Math.floor(Math.random() * customAvailable.length)];
+        } else {
+          const baseOnly = activeSymbols.filter(s => s.type !== 'image');
+          winningSymbol = baseOnly[Math.floor(Math.random() * baseOnly.length)];
+        }
+
+        final1 = winningSymbol;
+        final2 = winningSymbol;
+        final3 = winningSymbol;
+      } else {
+        const s1 = activeSymbols[Math.floor(Math.random() * activeSymbols.length)];
+        let s2 = activeSymbols[Math.floor(Math.random() * activeSymbols.length)];
+        let s3 = activeSymbols[Math.floor(Math.random() * activeSymbols.length)];
+
+        // Evita 3 idênticos quando for derrota
+        if (s1.id === s2.id && s2.id === s3.id) {
+          const distinct = activeSymbols.filter(s => s.id !== s1.id);
+          s3 = distinct[Math.floor(Math.random() * distinct.length)];
+        }
+
+        final1 = s1;
+        final2 = s2;
+        final3 = s3;
+      }
+
+      const spinTimer = setInterval(() => {
+        if (reel1.classList.contains('spinning')) renderSymbol(reel1, activeSymbols[Math.floor(Math.random() * activeSymbols.length)]);
+        if (reel2.classList.contains('spinning')) renderSymbol(reel2, activeSymbols[Math.floor(Math.random() * activeSymbols.length)]);
+        if (reel3.classList.contains('spinning')) renderSymbol(reel3, activeSymbols[Math.floor(Math.random() * activeSymbols.length)]);
+        playSound('tick');
+      }, 80);
+
+      setTimeout(() => {
+        reel1.classList.remove('spinning');
+        renderSymbol(reel1, final1);
+        playSound('stop');
+      }, 1200);
+
+      setTimeout(() => {
+        reel2.classList.remove('spinning');
+        renderSymbol(reel2, final2);
+        playSound('stop');
+      }, 1700);
+
+      setTimeout(() => {
+        clearInterval(spinTimer);
+        reel3.classList.remove('spinning');
+        renderSymbol(reel3, final3);
+        playSound('stop');
+
+        checkResult(final1, final2, final3);
+        spinBtn.disabled = false;
+      }, 2200);
+    }
+
+    function checkResult(r1, r2, r3) {
+      if (r1.id === r2.id && r2.id === r3.id) {
+        totalWins++;
+        updateUI();
+
+        gameContainer.classList.add('shake');
+        setTimeout(() => gameContainer.classList.remove('shake'), 600);
+
+        if (r1.type === 'image') {
+          message.className = 'message win-jackpot';
+          message.innerHTML = `🔥 SUPER JACKPOT! 3 FOTOS (${r1.label})! GANHOU 300 MILHÕES !!! 🔥`;
+          playSound('win_jackpot');
+          triggerCelebration(true);
+        } else {
+          message.className = 'message win-normal';
+          message.innerHTML = '🎉 PARABÉNS! 3 SÍMBOLOS IGUAIS! GANHOU R$ 500,00! 🎉';
+          playSound('win_normal');
+          triggerCelebration(false);
+        }
+      } else {
+        message.className = 'message';
+        message.innerText = 'Tente novamente!';
+      }
+    }
+
+    const canvas = document.getElementById('celebrationCanvas');
+    const ctx = canvas.getContext('2d');
+    let particles = [];
+
+    function resizeCanvas() {
+      canvas.width = window.innerWidth;
+      canvas.height = window.innerHeight;
+    }
+    window.addEventListener('resize', resizeCanvas);
+    resizeCanvas();
+
+    class Particle {
+      constructor(x, y, isJackpot) {
+        this.x = x;
+        this.y = y;
+        this.isJackpot = isJackpot;
+
+        const angle = Math.random() * Math.PI * 2;
+        const speed = isJackpot ? Math.random() * 10 + 4 : Math.random() * 5 + 2;
+
+        this.vx = Math.cos(angle) * speed;
+        this.vy = Math.sin(angle) * speed - (isJackpot ? 3 : 0);
+        this.gravity = isJackpot ? 0.12 : 0.06;
+        this.alpha = 1;
+        this.decay = Math.random() * 0.015 + 0.008;
+        this.size = Math.random() * 8 + 4;
+        this.color = isJackpot 
+          ? ['#FFCC00', '#FF3300', '#FF00CC', '#00FFFF', '#FFFFFF'][Math.floor(Math.random() * 5)]
+          : ['#10B981', '#FFCC00', '#0038A8'][Math.floor(Math.random() * 3)];
+      }
+
+      update() {
+        this.x += this.vx;
+        this.y += this.vy;
+        this.vy += this.gravity;
+        this.alpha -= this.decay;
+      }
+
+      draw() {
+        ctx.save();
+        ctx.globalAlpha = Math.max(0, this.alpha);
+        ctx.fillStyle = this.color;
+        ctx.beginPath();
+        ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.restore();
+      }
+    }
+
+    function triggerCelebration(isJackpot) {
+      particles = [];
+      const count = isJackpot ? 180 : 80;
+
+      for (let f = 0; f < (isJackpot ? 5 : 2); f++) {
+        const x = Math.random() * canvas.width * 0.8 + canvas.width * 0.1;
+        const y = Math.random() * canvas.height * 0.4 + canvas.height * 0.1;
+        for (let i = 0; i < count / (isJackpot ? 4 : 2); i++) {
+          particles.push(new Particle(x, y, isJackpot));
+        }
+      }
+
+      animateParticles();
+    }
+
+    function animateParticles() {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+      particles.forEach((p, index) => {
+        p.update();
+        p.draw();
+        if (p.alpha <= 0) particles.splice(index, 1);
+      });
+
+      if (particles.length > 0) {
+        requestAnimationFrame(animateParticles);
+      } else {
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+      }
+    }
+  </script>
+</body>
+</html>

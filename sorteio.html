@@ -1,0 +1,590 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cassino Lucky Draw - Sorteador de Dezenas</title>
+    <style>
+        :root {
+            --casino-gold: #ffd700;
+            --casino-gold-dark: #b8860b;
+            --casino-red: #8b0000;
+            --casino-dark-red: #4a0000;
+            --casino-bg: #0d0d11;
+            --slot-bg: #050508;
+            --neon-glow: 0 0 15px rgba(255, 215, 0, 0.6);
+            --receipt-bg: #fffdf0;
+            --receipt-text: #222;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Segoe UI', Impact, Roboto, sans-serif;
+        }
+
+        body {
+            background-color: var(--casino-bg);
+            background-image: 
+                radial-gradient(circle at 50% 30%, #2a080c 0%, #0d0d11 70%);
+            color: #ffffff;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .main-container {
+            display: grid;
+            grid-template-columns: 1fr 360px;
+            gap: 25px;
+            max-width: 1100px;
+            width: 100%;
+        }
+
+        @media (max-width: 900px) {
+            .main-container {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        /* Painel Principal do Jogo de Azar */
+        .casino-cabinet {
+            background: linear-gradient(145deg, #1f1f28, #111118);
+            border: 4px solid var(--casino-gold);
+            border-radius: 20px;
+            padding: 30px;
+            display: flex;
+            flex-direction: column;
+            gap: 22px;
+            box-shadow: 0 0 30px rgba(255, 215, 0, 0.2), inset 0 0 15px rgba(0,0,0,0.8);
+            position: relative;
+        }
+
+        /* Topo Neon e Moldura */
+        .casino-title-box {
+            text-align: center;
+            background: linear-gradient(180deg, var(--casino-red), var(--casino-dark-red));
+            padding: 15px;
+            border-radius: 12px;
+            border: 2px solid var(--casino-gold);
+            box-shadow: inset 0 0 10px rgba(0,0,0,0.5), 0 4px 15px rgba(139, 0, 0, 0.5);
+        }
+
+        .casino-title-box h1 {
+            font-family: 'Impact', 'Arial Black', sans-serif;
+            font-size: 2rem;
+            color: var(--casino-gold);
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            text-shadow: 2px 2px 0px #000, 0 0 10px rgba(255, 215, 0, 0.8);
+        }
+
+        .casino-title-box p {
+            font-size: 0.85rem;
+            color: #ffcccc;
+            letter-spacing: 1px;
+            margin-top: 4px;
+        }
+
+        /* Seletor de Modalidades */
+        .options-group {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+
+        .option-btn {
+            flex: 1;
+            min-width: 110px;
+            padding: 12px 10px;
+            border: 2px solid #555;
+            background: linear-gradient(180deg, #3a3a45, #22222a);
+            color: #ddd;
+            border-radius: 10px;
+            cursor: pointer;
+            font-weight: bold;
+            font-size: 0.85rem;
+            transition: all 0.2s ease;
+            text-shadow: 1px 1px 2px #000;
+        }
+
+        .option-btn:hover {
+            border-color: var(--casino-gold);
+            color: #fff;
+        }
+
+        .option-btn.active {
+            border-color: var(--casino-gold);
+            background: linear-gradient(180deg, #ffd700, #b8860b);
+            color: #000;
+            text-shadow: none;
+            box-shadow: 0 0 12px rgba(255, 215, 0, 0.5);
+        }
+
+        /* Moldura das Rodroletas (Display dos Slots) */
+        .numbers-display-frame {
+            background: var(--slot-bg);
+            padding: 20px;
+            border-radius: 12px;
+            border: 3px solid #333;
+            box-shadow: inset 0 0 20px rgba(0,0,0,0.9), 0 0 10px rgba(255,215,0,0.1);
+        }
+
+        .numbers-display {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            justify-content: center;
+            align-content: center;
+            min-height: 200px;
+        }
+
+        .slot {
+            width: 54px;
+            height: 64px;
+            background: linear-gradient(180deg, #111, #222, #111);
+            border: 2px solid var(--casino-gold);
+            border-radius: 10px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 1.5rem;
+            font-family: 'Impact', sans-serif;
+            color: var(--casino-gold);
+            text-shadow: 0 0 8px rgba(255, 215, 0, 0.8);
+            box-shadow: inset 0 0 8px rgba(0,0,0,0.8), 0 4px 8px rgba(0,0,0,0.5);
+            transition: transform 0.1s;
+        }
+
+        .slot.stopped {
+            background: linear-gradient(180deg, #fff, #e0e0e0);
+            color: #8b0000;
+            text-shadow: none;
+            border-color: #ff4500;
+            box-shadow: 0 0 15px rgba(255, 69, 0, 0.8);
+            transform: scale(1.05);
+        }
+
+        /* Botão Aposta/Sortear */
+        .draw-btn {
+            padding: 16px;
+            background: linear-gradient(180deg, #00e676, #00897b);
+            color: #000;
+            border: 2px solid #a7ffeb;
+            border-radius: 12px;
+            font-size: 1.3rem;
+            font-weight: 900;
+            cursor: pointer;
+            letter-spacing: 2px;
+            text-transform: uppercase;
+            box-shadow: 0 6px 20px rgba(0, 230, 118, 0.4);
+            transition: all 0.15s ease;
+        }
+
+        .draw-btn:hover:not(:disabled) {
+            transform: translateY(-2px);
+            filter: brightness(1.1);
+            box-shadow: 0 8px 25px rgba(0, 230, 118, 0.6);
+        }
+
+        .draw-btn:active:not(:disabled) {
+            transform: translateY(1px);
+        }
+
+        .draw-btn:disabled {
+            background: linear-gradient(180deg, #555, #333);
+            border-color: #666;
+            color: #888;
+            cursor: not-allowed;
+            box-shadow: none;
+        }
+
+        /* Botão de Exportar TXT */
+        .export-btn {
+            padding: 10px;
+            background: linear-gradient(180deg, #2196f3, #1565c0);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-weight: bold;
+            font-size: 0.85rem;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+            transition: background 0.2s;
+        }
+
+        .export-btn:hover {
+            background: linear-gradient(180deg, #42a5f5, #1e88e5);
+        }
+
+        /* Comprovante / Bilhete do Cassino */
+        .receipt-container {
+            background: var(--receipt-bg);
+            color: var(--receipt-text);
+            padding: 25px 20px;
+            font-family: 'Courier New', Courier, monospace;
+            border-radius: 4px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.7);
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            max-height: 620px;
+            position: relative;
+        }
+
+        /* Borda Serrilhada */
+        .receipt-container::before, .receipt-container::after {
+            content: "";
+            position: absolute;
+            left: 0;
+            right: 0;
+            height: 10px;
+            background-size: 16px 16px;
+        }
+        .receipt-container::before {
+            top: -10px;
+            background-image: radial-gradient(circle, transparent 0, transparent 50%, var(--receipt-bg) 50%, var(--receipt-bg) 100%);
+        }
+        .receipt-container::after {
+            bottom: -10px;
+            background-image: radial-gradient(circle, var(--receipt-bg) 0, var(--receipt-bg) 50%, transparent 50%, transparent 100%);
+        }
+
+        .receipt-header {
+            text-align: center;
+            border-bottom: 2px dashed #444;
+            padding-bottom: 10px;
+            margin-bottom: 12px;
+        }
+
+        .receipt-header h2 {
+            font-size: 1.2rem;
+            font-weight: 900;
+        }
+
+        .receipt-body {
+            overflow-y: auto;
+            flex-grow: 1;
+            padding-right: 5px;
+        }
+
+        .receipt-section-title {
+            font-size: 0.72rem;
+            font-weight: bold;
+            text-align: center;
+            background: #e0d0b0;
+            padding: 4px 0;
+            margin: 10px 0 6px 0;
+            border-top: 1px dashed #666;
+            border-bottom: 1px dashed #666;
+            text-transform: uppercase;
+        }
+
+        .receipt-list {
+            list-style: none;
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+            font-size: 0.78rem;
+            font-weight: bold;
+        }
+
+        .receipt-item {
+            display: flex;
+            flex-direction: column;
+            border-bottom: 1px dotted #aaa;
+            padding-bottom: 4px;
+        }
+
+        .receipt-item-header {
+            display: flex;
+            justify-content: space-between;
+            color: #666;
+            font-size: 0.68rem;
+        }
+
+        .receipt-footer {
+            border-top: 2px dashed #444;
+            padding-top: 10px;
+            margin-top: 10px;
+            text-align: center;
+            font-size: 0.75rem;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+    </style>
+</head>
+<body>
+
+<div class="main-container">
+    <div class="casino-cabinet">
+        <div class="casino-title-box">
+            <h1>🎰 CASINO LUCKY DRAW</h1>
+            <p>SORTEADOR DE DEZENAS</p>
+        </div>
+        
+        <div class="options-group">
+            <button class="option-btn active" onclick="selectGame(5, 80, this)">5 de 01 a 80</button>
+            <button class="option-btn" onclick="selectGame(6, 60, this)">6 de 01 a 60</button>
+            <button class="option-btn" onclick="selectGame(15, 25, this)">15 de 01 a 25</button>
+        </div>
+
+        <div class="numbers-display-frame">
+            <div class="numbers-display" id="display"></div>
+        </div>
+
+        <button class="draw-btn" id="btnSortear" onclick="startDraw()">🎰 GIRAR / SORTEAR</button>
+    </div>
+
+    <div class="receipt-container">
+        <div class="receipt-header">
+            <h2>COMPROVANTE OFICIAL</h2>
+            <p id="receiptDate">DATA: --/--/----</p>
+        </div>
+
+        <div class="receipt-body">
+            <div class="receipt-section-title">5 DEZENAS (01-80)</div>
+            <ul class="receipt-list" id="receipt5"></ul>
+
+            <div class="receipt-section-title">6 DEZENAS (01-60)</div>
+            <ul class="receipt-list" id="receipt6"></ul>
+
+            <div class="receipt-section-title">15 DEZENAS (01-25)</div>
+            <ul class="receipt-list" id="receipt15"></ul>
+        </div>
+
+        <div class="receipt-footer">
+            <button class="export-btn" onclick="exportToTxt()">💾 Salvar TXT por Data</button>
+            <p>*** BOA SORTE ***</p>
+        </div>
+    </div>
+</div>
+
+<script>
+    let currentConfig = { count: 5, max: 80 };
+    let isSpinning = false;
+    
+    // Histórico de sorteios
+    const historyData = {
+        5: [],
+        6: [],
+        15: []
+    };
+
+    // Atualiza a data no comprovante
+    const today = new Date();
+    document.getElementById('receiptDate').innerText = `DATA: ${today.toLocaleDateString('pt-BR')}`;
+
+    // Web Audio API para Sintetizador de Cassino
+    const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+
+    function playReelTick() {
+        if (audioCtx.state === 'suspended') audioCtx.resume();
+        const osc = audioCtx.createOscillator();
+        const gain = audioCtx.createGain();
+
+        osc.type = 'square';
+        osc.frequency.setValueAtTime(120 + Math.random() * 40, audioCtx.currentTime);
+
+        gain.gain.setValueAtTime(0.08, audioCtx.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.04);
+
+        osc.connect(gain);
+        gain.connect(audioCtx.destination);
+
+        osc.start();
+        osc.stop(audioCtx.currentTime + 0.04);
+    }
+
+    function playSlotStop() {
+        if (audioCtx.state === 'suspended') audioCtx.resume();
+        const osc = audioCtx.createOscillator();
+        const gain = audioCtx.createGain();
+
+        osc.type = 'triangle';
+        osc.frequency.setValueAtTime(320, audioCtx.currentTime);
+        osc.frequency.exponentialRampToValueAtTime(80, audioCtx.currentTime + 0.12);
+
+        gain.gain.setValueAtTime(0.3, audioCtx.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.12);
+
+        osc.connect(gain);
+        gain.connect(audioCtx.destination);
+
+        osc.start();
+        osc.stop(audioCtx.currentTime + 0.12);
+    }
+
+    function playWinFanfare() {
+        if (audioCtx.state === 'suspended') audioCtx.resume();
+        const notes = [523.25, 659.25, 783.99, 1046.50]; // C5, E5, G5, C6
+        notes.forEach((freq, idx) => {
+            setTimeout(() => {
+                const osc = audioCtx.createOscillator();
+                const gain = audioCtx.createGain();
+
+                osc.type = 'sine';
+                osc.frequency.value = freq;
+
+                gain.gain.setValueAtTime(0.2, audioCtx.currentTime);
+                gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.3);
+
+                osc.connect(gain);
+                gain.connect(audioCtx.destination);
+
+                osc.start();
+                osc.stop(audioCtx.currentTime + 0.3);
+            }, idx * 90);
+        });
+    }
+
+    function renderSlots() {
+        const display = document.getElementById('display');
+        display.innerHTML = '';
+        for (let i = 0; i < currentConfig.count; i++) {
+            const slot = document.createElement('div');
+            slot.className = 'slot';
+            slot.id = `slot-${i}`;
+            slot.innerText = '00';
+            display.appendChild(slot);
+        }
+    }
+
+    function selectGame(count, max, btn) {
+        if (isSpinning) return;
+        document.querySelectorAll('.option-btn').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        currentConfig = { count, max };
+        renderSlots();
+    }
+
+    function generateRandomNumbers(count, max) {
+        const numbers = new Set();
+        while (numbers.size < count) {
+            const num = Math.floor(Math.random() * max) + 1;
+            numbers.add(num);
+        }
+        return Array.from(numbers).sort((a, b) => a - b);
+    }
+
+    function startDraw() {
+        if (isSpinning) return;
+        isSpinning = true;
+        document.getElementById('btnSortear').disabled = true;
+
+        const drawnNumbers = generateRandomNumbers(currentConfig.count, currentConfig.max);
+        const slots = [];
+        
+        for (let i = 0; i < currentConfig.count; i++) {
+            const el = document.getElementById(`slot-${i}`);
+            el.classList.remove('stopped');
+            slots.push({
+                element: el,
+                finalValue: String(drawnNumbers[i]).padStart(2, '0'),
+                stopped: false
+            });
+        }
+
+        const tickInterval = setInterval(playReelTick, 70);
+
+        const spinInterval = setInterval(() => {
+            slots.forEach(slot => {
+                if (!slot.stopped) {
+                    const randomVal = Math.floor(Math.random() * currentConfig.max) + 1;
+                    slot.element.innerText = String(randomVal).padStart(2, '0');
+                }
+            });
+        }, 40);
+
+        slots.forEach((slot, index) => {
+            setTimeout(() => {
+                slot.stopped = true;
+                slot.element.innerText = slot.finalValue;
+                slot.element.classList.add('stopped');
+                playSlotStop();
+
+                if (index === slots.length - 1) {
+                    clearInterval(spinInterval);
+                    clearInterval(tickInterval);
+                    isSpinning = false;
+                    document.getElementById('btnSortear').disabled = false;
+                    playWinFanfare();
+                    saveAndRenderReceipt(drawnNumbers);
+                }
+            }, 800 + (index * 250));
+        });
+    }
+
+    function saveAndRenderReceipt(numbers) {
+        const timestamp = new Date();
+        const dateStr = timestamp.toLocaleDateString('pt-BR');
+        const timeStr = timestamp.toLocaleTimeString('pt-BR');
+
+        const gameEntry = {
+            id: historyData[currentConfig.count].length + 1,
+            date: dateStr,
+            time: timeStr,
+            numbers: numbers.map(n => String(n).padStart(2, '0')).join(' - ')
+        };
+
+        historyData[currentConfig.count].unshift(gameEntry);
+
+        const listElement = document.getElementById(`receipt${currentConfig.count}`);
+        listElement.innerHTML = '';
+
+        historyData[currentConfig.count].forEach((game) => {
+            const li = document.createElement('li');
+            li.className = 'receipt-item';
+            li.innerHTML = `
+                <div class="receipt-item-header">
+                    <span>JOGO #${String(game.id).padStart(2, '0')}</span>
+                    <span>${game.time}</span>
+                </div>
+                <div>${game.numbers}</div>
+            `;
+            listElement.appendChild(li);
+        });
+    }
+
+    // Exportação em Arquivo TXT formatado e recuperável por data
+    function exportToTxt() {
+        const dateFormatted = new Date().toISOString().split('T')[0];
+        let content = `=========================================\n`;
+        content += `    COMPROVANTE DE SORTEIOS - CASSINO    \n`;
+        content += `    Data de Exportação: ${new Date().toLocaleString('pt-BR')}\n`;
+        content += `=========================================\n\n`;
+
+        [5, 6, 15].forEach(type => {
+            content += `--- MODALIDADE ${type} DEZENAS ---\n`;
+            if (historyData[type].length === 0) {
+                content += `(Nenhum sorteio registrado)\n`;
+            } else {
+                historyData[type].forEach(item => {
+                    content += `[${item.date} ${item.time}] JOGO #${String(item.id).padStart(2, '0')}: ${item.numbers}\n`;
+                });
+            }
+            content += `\n`;
+        });
+
+        content += `=========================================\n`;
+        content += `           FIM DO RELATÓRIO              \n`;
+
+        const blob = new Blob([content], { type: 'text/plain;charset=utf-8' });
+        const link = document.createElement('a');
+        link.href = URL.createObjectURL(blob);
+        link.download = `sorteios_${dateFormatted}.txt`;
+        link.click();
+    }
+
+    renderSlots();
+</script>
+
+</body>
+</html>

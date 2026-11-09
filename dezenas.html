@@ -1,0 +1,1018 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Sorteador e Conferidor de Dezenas</title>
+    <style>
+        :root {
+            --casino-gold: #ffd700;
+            --casino-gold-dark: #b8860b;
+            --casino-red: #8b0000;
+            --casino-green: #00e676;
+            --casino-blue: #2196f3;
+            --casino-bg: #0d0d11;
+            --slot-bg: #050508;
+            --receipt-bg: #fffdf0;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Segoe UI', Impact, Roboto, sans-serif;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        html, body {
+            width: 100%;
+            height: 100%;
+            background-color: var(--casino-bg);
+            background-image: radial-gradient(circle at 50% 30%, #2a080c 0%, #0d0d11 100%);
+            color: #ffffff;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            overflow-x: hidden;
+        }
+
+        .main-container {
+            width: 100%;
+            max-width: 480px;
+            min-height: 100vh;
+            min-height: 100dvh;
+            padding: 12px;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .header-title-btn {
+            background: linear-gradient(180deg, var(--casino-red), #4a0000);
+            border: 2px solid var(--casino-gold);
+            border-radius: 12px;
+            padding: 10px 5px;
+            text-align: center;
+            cursor: pointer;
+            box-shadow: 0 4px 12px rgba(255, 215, 0, 0.2);
+            transition: transform 0.1s;
+        }
+
+        .header-title-btn:active {
+            transform: scale(0.98);
+        }
+
+        .header-title-btn h1 {
+            font-family: 'Impact', 'Arial Black', sans-serif;
+            font-size: 1.3rem;
+            color: var(--casino-gold);
+            text-transform: uppercase;
+            white-space: nowrap;
+            letter-spacing: 0.5px;
+            text-shadow: 1px 1px 0px #000, 0 0 8px rgba(255, 215, 0, 0.6);
+        }
+
+        .header-title-btn p {
+            font-size: 0.65rem;
+            color: #ffcccc;
+            margin-top: 2px;
+            text-transform: uppercase;
+        }
+
+        .options-group {
+            display: flex;
+            gap: 6px;
+        }
+
+        .option-btn {
+            flex: 1;
+            padding: 8px 2px;
+            border: 1.5px solid #555;
+            background: linear-gradient(180deg, #3a3a45, #22222a);
+            color: #ddd;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: bold;
+            font-size: 0.75rem;
+            text-align: center;
+        }
+
+        .option-btn.active {
+            border-color: var(--casino-gold);
+            background: linear-gradient(180deg, #ffd700, #b8860b);
+            color: #000;
+            box-shadow: 0 0 8px rgba(255, 215, 0, 0.4);
+        }
+
+        .numbers-display-frame {
+            background: var(--slot-bg);
+            padding: 12px;
+            border-radius: 12px;
+            border: 2px solid #333;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: inset 0 0 15px rgba(0,0,0,0.9);
+            min-height: 120px;
+        }
+
+        .numbers-display {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 6px;
+            justify-content: center;
+            align-items: center;
+            width: 100%;
+        }
+
+        .slot {
+            width: 44px;
+            height: 50px;
+            background: linear-gradient(180deg, #111, #222, #111);
+            border: 2px solid var(--casino-gold);
+            border-radius: 8px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 1.3rem;
+            font-family: 'Impact', sans-serif;
+            color: var(--casino-gold);
+            text-shadow: 0 0 6px rgba(255, 215, 0, 0.8);
+        }
+
+        .slot.stopped {
+            background: linear-gradient(180deg, #fff, #e0e0e0);
+            color: #8b0000;
+            text-shadow: none;
+            border-color: #ff4500;
+            box-shadow: 0 0 10px rgba(255, 69, 0, 0.8);
+        }
+
+        .action-buttons {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .btn-main {
+            width: 100%;
+            padding: 12px;
+            border-radius: 10px;
+            font-size: 0.95rem;
+            font-weight: 900;
+            cursor: pointer;
+            letter-spacing: 0.5px;
+            text-transform: uppercase;
+            border: 2px solid transparent;
+        }
+
+        .draw-btn {
+            background: linear-gradient(180deg, #00e676, #00897b);
+            color: #000;
+            border-color: #a7ffeb;
+            box-shadow: 0 4px 15px rgba(0, 230, 118, 0.3);
+        }
+
+        .my-game-btn {
+            background: linear-gradient(180deg, #ff9800, #f57c00);
+            color: #fff;
+            border-color: #ffe0b2;
+            box-shadow: 0 4px 10px rgba(255, 152, 0, 0.3);
+        }
+
+        .official-btn {
+            background: linear-gradient(180deg, #2196f3, #0d47a1);
+            color: #fff;
+            border-color: #90caf9;
+            box-shadow: 0 4px 10px rgba(33, 150, 243, 0.3);
+        }
+
+        .btn-main:disabled {
+            background: linear-gradient(180deg, #555, #333) !important;
+            border-color: #666 !important;
+            color: #888 !important;
+            box-shadow: none !important;
+        }
+
+        /* Painel de Comparação Principal */
+        .check-results-panel {
+            background: #141419;
+            border: 1px solid #333;
+            border-radius: 10px;
+            padding: 10px;
+            font-size: 0.75rem;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .check-row {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+        }
+
+        .check-label {
+            color: var(--casino-gold);
+            font-weight: bold;
+            font-size: 0.7rem;
+            text-transform: uppercase;
+        }
+
+        .balls-row {
+            display: flex;
+            gap: 4px;
+            flex-wrap: wrap;
+            min-height: 26px;
+            align-items: center;
+        }
+
+        .badge-ball {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 26px;
+            height: 26px;
+            border-radius: 50%;
+            background: #333;
+            color: #fff;
+            font-size: 0.7rem;
+            font-weight: bold;
+        }
+
+        .badge-ball.hit {
+            background: var(--casino-green);
+            color: #000;
+            box-shadow: 0 0 6px var(--casino-green);
+        }
+
+        .badge-ball.miss {
+            background: #d32f2f;
+            color: #fff;
+            opacity: 0.6;
+        }
+
+        /* Modais */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            height: 100dvh;
+            background: rgba(0,0,0,0.88);
+            display: none;
+            justify-content: center;
+            align-items: center;
+            z-index: 999;
+            padding: 15px;
+        }
+
+        .modal-overlay.active {
+            display: flex;
+        }
+
+        /* Modal Comprovante */
+        .receipt-container {
+            background: var(--receipt-bg);
+            color: #222;
+            width: 100%;
+            max-width: 420px;
+            max-height: 90vh;
+            padding: 20px 15px;
+            font-family: 'Courier New', Courier, monospace;
+            border-radius: 6px;
+            box-shadow: 0 0 20px rgba(255, 215, 0, 0.3);
+            display: flex;
+            flex-direction: column;
+        }
+
+        .receipt-header {
+            text-align: center;
+            border-bottom: 2px dashed #444;
+            padding-bottom: 8px;
+            margin-bottom: 8px;
+        }
+
+        .receipt-header h2 { font-size: 1.1rem; font-weight: 900; }
+
+        .receipt-body {
+            overflow-y: auto;
+            flex-grow: 1;
+            padding-right: 4px;
+        }
+
+        .receipt-section-title {
+            font-size: 0.7rem;
+            font-weight: bold;
+            text-align: center;
+            background: #e0d0b0;
+            padding: 3px 0;
+            margin: 10px 0 4px 0;
+            border-top: 1px dashed #666;
+            border-bottom: 1px dashed #666;
+        }
+
+        .receipt-list {
+            list-style: none;
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+            font-size: 0.72rem;
+        }
+
+        .receipt-item {
+            display: flex;
+            flex-direction: column;
+            border-bottom: 1px dotted #aaa;
+            padding-bottom: 4px;
+            gap: 2px;
+        }
+
+        .receipt-item-header {
+            display: flex;
+            justify-content: space-between;
+            color: #666;
+            font-size: 0.65rem;
+            font-weight: bold;
+        }
+
+        .receipt-footer {
+            border-top: 2px dashed #444;
+            padding-top: 10px;
+            margin-top: 8px;
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+        }
+
+        /* Modal Formulários Input */
+        .input-modal-container {
+            background: #1e1e24;
+            border: 2px solid var(--casino-gold);
+            border-radius: 12px;
+            width: 100%;
+            max-width: 400px;
+            padding: 18px;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            color: #fff;
+            box-shadow: 0 0 20px rgba(0,0,0,0.8);
+        }
+
+        .input-modal-header {
+            text-align: center;
+            border-bottom: 1px solid #333;
+            padding-bottom: 6px;
+        }
+
+        .input-modal-header h3 {
+            color: var(--casino-gold);
+            font-size: 1.1rem;
+            text-transform: uppercase;
+        }
+
+        .input-modal-header p {
+            font-size: 0.7rem;
+            color: #aaa;
+            margin-top: 2px;
+        }
+
+        .form-group {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+        }
+
+        .form-group label {
+            font-size: 0.75rem;
+            color: var(--casino-gold);
+            font-weight: bold;
+        }
+
+        .contest-input {
+            width: 100%;
+            height: 40px;
+            font-size: 1.2rem;
+            text-align: center;
+            font-weight: bold;
+            background: #000;
+            color: var(--casino-gold);
+            border: 1.5px solid #555;
+            border-radius: 6px;
+            outline: none;
+            letter-spacing: 4px;
+        }
+
+        .contest-input:focus {
+            border-color: var(--casino-gold);
+        }
+
+        .num-input {
+            width: 90px;
+            height: 45px;
+            font-size: 1.6rem;
+            text-align: center;
+            font-weight: bold;
+            background: #000;
+            color: var(--casino-gold);
+            border: 2px solid var(--casino-gold);
+            border-radius: 8px;
+            outline: none;
+            margin: 0 auto;
+        }
+
+        .live-balls-container {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 6px;
+            justify-content: center;
+            min-height: 40px;
+            background: #121215;
+            padding: 8px;
+            border-radius: 6px;
+            border: 1px solid #333;
+        }
+
+        .btn-action {
+            padding: 10px;
+            border: none;
+            border-radius: 6px;
+            font-weight: bold;
+            font-size: 0.85rem;
+            cursor: pointer;
+            text-align: center;
+        }
+
+        .btn-export { background: #1976d2; color: white; }
+        .btn-back { background: #d32f2f; color: white; }
+        .btn-cancel { background: #555; color: white; }
+        .btn-confirm { background: #2e7d32; color: white; }
+    </style>
+</head>
+<body>
+
+<div class="main-container">
+    <div class="header-title-btn" onclick="openReceiptModal()">
+        <h1>Sorteador & Conferidor</h1>
+        <p>📋 CLIQUE AQUI PARA VER RELATÓRIO E HISTÓRICO</p>
+    </div>
+    
+    <div class="options-group">
+        <button class="option-btn active" onclick="selectGame(5, 80, this)">5 (01-80)</button>
+        <button class="option-btn" onclick="selectGame(6, 60, this)">6 (01-60)</button>
+        <button class="option-btn" onclick="selectGame(15, 25, this)">15 (01-25)</button>
+    </div>
+
+    <!-- Tela do App (Dezenas Geradas) -->
+    <div class="numbers-display-frame">
+        <div class="numbers-display" id="display"></div>
+    </div>
+
+    <!-- Painel de Comparação e Resultado -->
+    <div class="check-results-panel">
+        <div class="check-row">
+            <span class="check-label">Meu Jogo Cadastrado:</span>
+            <div class="balls-row" id="panelMyGame">--</div>
+        </div>
+        <div class="check-row">
+            <span class="check-label" id="labelOfficialContest">Sorteio Oficial:</span>
+            <div class="balls-row" id="panelOfficial">--</div>
+        </div>
+        <div class="check-row">
+            <span class="check-label" id="labelHitsCount">Resultado (Acertos):</span>
+            <div class="balls-row" id="panelHits">--</div>
+        </div>
+    </div>
+
+    <!-- Sequência de Passos -->
+    <div class="action-buttons">
+        <button class="btn-main draw-btn" id="btnSortear" onclick="startDraw()">1. 🎰 GERAR DEZENAS NO APP</button>
+        <button class="btn-main my-game-btn" id="btnMeuJogo" onclick="openMyGameModal()">2. 📝 REGISTRAR MEU JOGO FEITO</button>
+        <button class="btn-main official-btn" id="btnOficial" onclick="openOfficialModal()">3. 🏛️ INSERIR SORTEIO OFICIAL</button>
+    </div>
+</div>
+
+<!-- MODAL COMPROVANTE / HISTÓRICO -->
+<div class="modal-overlay" id="modalReceiptOverlay">
+    <div class="receipt-container">
+        <div class="receipt-header">
+            <h2>COMPROVANTE / RELATÓRIO</h2>
+            <p id="receiptDate">DATA: --/--/----</p>
+        </div>
+
+        <div class="receipt-body">
+            <div class="receipt-section-title">DEZENAS GERADAS PELO APP</div>
+            <ul class="receipt-list" id="receiptAppGenerated"></ul>
+
+            <div class="receipt-section-title">HISTÓRICO DE JOGOS E SORTEIOS OFICIAIS</div>
+            <ul class="receipt-list" id="receiptOfficialHistory"></ul>
+        </div>
+
+        <div class="receipt-footer">
+            <button class="btn-action btn-export" onclick="exportToTxt()">💾 Salvar Arquivo (.TXT)</button>
+            <button class="btn-action btn-back" onclick="closeReceiptModal()">← VOLTAR AO JOGO</button>
+        </div>
+    </div>
+</div>
+
+<!-- MODAL 1: MEU JOGO FEITO -->
+<div class="modal-overlay" id="modalMyGameOverlay">
+    <div class="input-modal-container">
+        <div class="input-modal-header">
+            <h3 id="myGameModalTitle">Registrar Jogo Feito</h3>
+            <p id="myGameModalSubtitle">Digite os números que você apostou.</p>
+        </div>
+
+        <div style="display:flex; justify-content:center; margin: 5px 0;">
+            <input type="number" id="myGameInput" class="num-input" placeholder="00" autocomplete="off">
+        </div>
+
+        <div style="font-size: 0.7rem; color: #aaa; text-align: center;">Dezenas Inseridas:</div>
+        <div class="live-balls-container" id="myGameLiveBalls"></div>
+
+        <div style="display: flex; gap: 8px; margin-top: 5px;">
+            <button class="btn-action btn-cancel" style="flex:1" onclick="closeMyGameModal()">Cancelar</button>
+            <button class="btn-action btn-confirm" style="flex:1" onclick="finishMyGame()">Salvar Jogo</button>
+        </div>
+    </div>
+</div>
+
+<!-- MODAL 2: SORTEIO OFICIAL (COM CONCURSO DE 4 DÍGITOS) -->
+<div class="modal-overlay" id="modalOfficialOverlay">
+    <div class="input-modal-container">
+        <div class="input-modal-header">
+            <h3>Sorteio Oficial</h3>
+            <p id="officialModalSubtitle">Informe o número do concurso e as dezenas.</p>
+        </div>
+
+        <div class="form-group">
+            <label for="contestNumber">Número do Concurso (4 dígitos):</label>
+            <input type="text" id="contestNumber" class="contest-input" maxlength="4" placeholder="0000" inputmode="numeric">
+        </div>
+
+        <div class="form-group" style="text-align: center;">
+            <label>Digitar Dezenas Sorteadas:</label>
+            <input type="number" id="officialInput" class="num-input" placeholder="00" autocomplete="off" style="margin-top: 4px;">
+        </div>
+
+        <div style="font-size: 0.7rem; color: #aaa; text-align: center;">Dezenas Oficiais Inseridas:</div>
+        <div class="live-balls-container" id="officialLiveBalls"></div>
+
+        <div style="display: flex; gap: 8px; margin-top: 5px;">
+            <button class="btn-action btn-cancel" style="flex:1" onclick="closeOfficialModal()">Cancelar</button>
+            <button class="btn-action btn-confirm" style="flex:1" onclick="finishOfficialCheck()">Comparar e Salvar</button>
+        </div>
+    </div>
+</div>
+
+<script>
+    let currentConfig = { count: 5, max: 80 };
+    let isSpinning = false;
+    
+    // Dados da sessão atual
+    let appNumbers = [];
+    let myGameNumbers = [];
+    let officialNumbers = [];
+    let contestNum = "";
+
+    // Dados salvos no localStorage
+    let storeData = JSON.parse(localStorage.getItem('casinoData')) || {
+        appGenerated: [],
+        officialHistory: []
+    };
+
+    document.getElementById('receiptDate').innerText = `DATA: ${new Date().toLocaleDateString('pt-BR')}`;
+
+    // Web Audio API
+    const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+
+    function playReelTick() {
+        if (audioCtx.state === 'suspended') audioCtx.resume();
+        const osc = audioCtx.createOscillator();
+        const gain = audioCtx.createGain();
+        osc.type = 'square';
+        osc.frequency.setValueAtTime(140 + Math.random() * 30, audioCtx.currentTime);
+        gain.gain.setValueAtTime(0.05, audioCtx.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.03);
+        osc.connect(gain);
+        gain.connect(audioCtx.destination);
+        osc.start();
+        osc.stop(audioCtx.currentTime + 0.03);
+    }
+
+    function playSlotStop() {
+        if (audioCtx.state === 'suspended') audioCtx.resume();
+        const osc = audioCtx.createOscillator();
+        const gain = audioCtx.createGain();
+        osc.type = 'triangle';
+        osc.frequency.setValueAtTime(300, audioCtx.currentTime);
+        osc.frequency.exponentialRampToValueAtTime(70, audioCtx.currentTime + 0.1);
+        gain.gain.setValueAtTime(0.2, audioCtx.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.1);
+        osc.connect(gain);
+        gain.connect(audioCtx.destination);
+        osc.start();
+        osc.stop(audioCtx.currentTime + 0.1);
+    }
+
+    function renderSlots() {
+        const display = document.getElementById('display');
+        display.innerHTML = '';
+        for (let i = 0; i < currentConfig.count; i++) {
+            const slot = document.createElement('div');
+            slot.className = 'slot';
+            slot.id = `slot-${i}`;
+            slot.innerText = '00';
+            
+            if (currentConfig.count === 15) {
+                slot.style.width = '36px';
+                slot.style.height = '44px';
+                slot.style.fontSize = '1.1rem';
+            }
+            display.appendChild(slot);
+        }
+    }
+
+    function selectGame(count, max, btn) {
+        if (isSpinning) return;
+        document.querySelectorAll('.option-btn').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        currentConfig = { count, max };
+        
+        appNumbers = [];
+        myGameNumbers = [];
+        officialNumbers = [];
+        contestNum = "";
+        
+        resetPanel();
+        renderSlots();
+    }
+
+    function resetPanel() {
+        document.getElementById('panelMyGame').innerHTML = '--';
+        document.getElementById('panelOfficial').innerHTML = '--';
+        document.getElementById('panelHits').innerHTML = '--';
+        document.getElementById('labelOfficialContest').textContent = 'Sorteio Oficial:';
+        document.getElementById('labelHitsCount').textContent = 'Resultado (Acertos):';
+    }
+
+    function generateRandomNumbers(count, max) {
+        const numbers = new Set();
+        while (numbers.size < count) {
+            numbers.add(Math.floor(Math.random() * max) + 1);
+        }
+        return Array.from(numbers).sort((a, b) => a - b);
+    }
+
+    /* 1. GERAR DEZENAS NO APP */
+    function startDraw() {
+        if (isSpinning) return;
+        isSpinning = true;
+        document.getElementById('btnSortear').disabled = true;
+
+        appNumbers = generateRandomNumbers(currentConfig.count, currentConfig.max);
+
+        const slots = [];
+        for (let i = 0; i < currentConfig.count; i++) {
+            const el = document.getElementById(`slot-${i}`);
+            el.classList.remove('stopped');
+            slots.push({
+                element: el,
+                finalValue: String(appNumbers[i]).padStart(2, '0'),
+                stopped: false
+            });
+        }
+
+        const tickInterval = setInterval(playReelTick, 70);
+        const spinInterval = setInterval(() => {
+            slots.forEach(slot => {
+                if (!slot.stopped) {
+                    const randomVal = Math.floor(Math.random() * currentConfig.max) + 1;
+                    slot.element.innerText = String(randomVal).padStart(2, '0');
+                }
+            });
+        }, 40);
+
+        slots.forEach((slot, index) => {
+            setTimeout(() => {
+                slot.stopped = true;
+                slot.element.innerText = slot.finalValue;
+                slot.element.classList.add('stopped');
+                playSlotStop();
+
+                if (index === slots.length - 1) {
+                    clearInterval(spinInterval);
+                    clearInterval(tickInterval);
+                    isSpinning = false;
+                    document.getElementById('btnSortear').disabled = false;
+                    
+                    saveAppGeneratedHistory(appNumbers);
+                }
+            }, 500 + (index * 150));
+        });
+    }
+
+    function saveAppGeneratedHistory(numbers) {
+        const timestamp = new Date();
+        const entry = {
+            date: timestamp.toLocaleDateString('pt-BR'),
+            time: timestamp.toLocaleTimeString('pt-BR'),
+            type: currentConfig.count,
+            numbers: numbers.map(n => String(n).padStart(2, '0')).join(' - ')
+        };
+        storeData.appGenerated.unshift(entry);
+        localStorage.setItem('casinoData', JSON.stringify(storeData));
+    }
+
+    /* 2. FORMULÁRIO: MEU JOGO FEITO */
+    const myGameInput = document.getElementById('myGameInput');
+
+    function openMyGameModal() {
+        myGameNumbers = [];
+        renderLiveBalls('myGameLiveBalls', myGameNumbers);
+        document.getElementById('myGameModalTitle').textContent = `Meu Jogo (${currentConfig.count} Dezenas)`;
+        document.getElementById('myGameModalSubtitle').textContent = `Digite dezenas de 01 a ${currentConfig.max}.`;
+        document.getElementById('modalMyGameOverlay').classList.add('active');
+        myGameInput.value = '';
+        setTimeout(() => myGameInput.focus(), 100);
+    }
+
+    function closeMyGameModal() {
+        document.getElementById('modalMyGameOverlay').classList.remove('active');
+    }
+
+    myGameInput.addEventListener('input', function() {
+        if (this.value.length >= 2) processMyGameInput();
+    });
+    myGameInput.addEventListener('keydown', function(e) {
+        if (e.key === 'Enter') { e.preventDefault(); processMyGameInput(); }
+    });
+
+    function processMyGameInput() {
+        const val = parseInt(myGameInput.value, 10);
+        if (isNaN(val) || val < 1 || val > currentConfig.max) {
+            myGameInput.value = ''; return;
+        }
+        if (myGameNumbers.includes(val)) {
+            alert("Dezena já inserida!"); myGameInput.value = ''; return;
+        }
+        myGameNumbers.push(val);
+        renderLiveBalls('myGameLiveBalls', myGameNumbers);
+        myGameInput.value = '';
+        myGameInput.focus();
+
+        if (myGameNumbers.length >= currentConfig.count) {
+            finishMyGame();
+        }
+    }
+
+    function finishMyGame() {
+        if (myGameNumbers.length === 0) {
+            alert("Insira ao menos uma dezena para o seu jogo!");
+            return;
+        }
+        myGameNumbers.sort((a, b) => a - b);
+        
+        // Exibe no painel
+        const panel = document.getElementById('panelMyGame');
+        panel.innerHTML = '';
+        myGameNumbers.forEach(n => {
+            const b = document.createElement('div');
+            b.className = 'badge-ball';
+            b.textContent = String(n).padStart(2, '0');
+            panel.appendChild(b);
+        });
+
+        closeMyGameModal();
+        compareAndDisplay();
+    }
+
+    /* 3. FORMULÁRIO: SORTEIO OFICIAL */
+    const officialInput = document.getElementById('officialInput');
+    const contestInput = document.getElementById('contestNumber');
+
+    // Força limite de 4 dígitos no Concurso
+    contestInput.addEventListener('input', function() {
+        this.value = this.value.replace(/\D/g, '').slice(0, 4);
+    });
+
+    function openOfficialModal() {
+        officialNumbers = [];
+        renderLiveBalls('officialLiveBalls', officialNumbers);
+        document.getElementById('officialModalSubtitle').textContent = `Modalidade: ${currentConfig.count} Dezenas (01 a ${currentConfig.max})`;
+        document.getElementById('modalOfficialOverlay').classList.add('active');
+        officialInput.value = '';
+        if (!contestInput.value) contestInput.focus();
+        else officialInput.focus();
+    }
+
+    function closeOfficialModal() {
+        document.getElementById('modalOfficialOverlay').classList.remove('active');
+    }
+
+    officialInput.addEventListener('input', function() {
+        if (this.value.length >= 2) processOfficialInput();
+    });
+    officialInput.addEventListener('keydown', function(e) {
+        if (e.key === 'Enter') { e.preventDefault(); processOfficialInput(); }
+    });
+
+    function processOfficialInput() {
+        const val = parseInt(officialInput.value, 10);
+        if (isNaN(val) || val < 1 || val > currentConfig.max) {
+            officialInput.value = ''; return;
+        }
+        if (officialNumbers.includes(val)) {
+            alert("Dezena já inserida!"); officialInput.value = ''; return;
+        }
+        officialNumbers.push(val);
+        renderLiveBalls('officialLiveBalls', officialNumbers);
+        officialInput.value = '';
+        officialInput.focus();
+
+        if (officialNumbers.length >= currentConfig.count) {
+            finishOfficialCheck();
+        }
+    }
+
+    function finishOfficialCheck() {
+        contestNum = contestInput.value.trim();
+        if (contestNum.length < 4) {
+            alert("Por favor, digite o número do concurso com 4 casas (ex: 2984).");
+            contestInput.focus();
+            return;
+        }
+        if (officialNumbers.length === 0) {
+            alert("Insira as dezenas do sorteio oficial!");
+            return;
+        }
+
+        officialNumbers.sort((a, b) => a - b);
+
+        // Exibe Sorteio Oficial no Painel
+        document.getElementById('labelOfficialContest').textContent = `Sorteio Oficial (Conc. ${contestNum}):`;
+        const panelOfficial = document.getElementById('panelOfficial');
+        panelOfficial.innerHTML = '';
+        officialNumbers.forEach(n => {
+            const b = document.createElement('div');
+            b.className = 'badge-ball';
+            b.textContent = String(n).padStart(2, '0');
+            panelOfficial.appendChild(b);
+        });
+
+        closeOfficialModal();
+        compareAndDisplay();
+        saveOfficialComparisonHistory();
+    }
+
+    /* COMPARAÇÃO E RESULTADO */
+    function compareAndDisplay() {
+        if (myGameNumbers.length === 0 || officialNumbers.length === 0) {
+            return; // Precisa dos dois para fazer a comparação de acertos
+        }
+
+        const hits = myGameNumbers.filter(n => officialNumbers.includes(n));
+        const panelHits = document.getElementById('panelHits');
+        panelHits.innerHTML = '';
+
+        document.getElementById('labelHitsCount').textContent = `Resultado (${hits.length} de ${currentConfig.count} acertos):`;
+
+        myGameNumbers.forEach(n => {
+            const b = document.createElement('div');
+            const isHit = officialNumbers.includes(n);
+            b.className = `badge-ball ${isHit ? 'hit' : 'miss'}`;
+            b.textContent = String(n).padStart(2, '0');
+            panelHits.appendChild(b);
+        });
+    }
+
+    function saveOfficialComparisonHistory() {
+        if (myGameNumbers.length === 0 || officialNumbers.length === 0) return;
+
+        const timestamp = new Date();
+        const hits = myGameNumbers.filter(n => officialNumbers.includes(n));
+
+        const entry = {
+            date: timestamp.toLocaleDateString('pt-BR'),
+            time: timestamp.toLocaleTimeString('pt-BR'),
+            contest: contestNum,
+            type: currentConfig.count,
+            myGame: myGameNumbers.map(n => String(n).padStart(2, '0')).join(' - '),
+            official: officialNumbers.map(n => String(n).padStart(2, '0')).join(' - '),
+            hitsCount: hits.length,
+            hitsList: hits.map(n => String(n).padStart(2, '0')).join(' - ') || 'Nenhum acerto'
+        };
+
+        storeData.officialHistory.unshift(entry);
+        localStorage.setItem('casinoData', JSON.stringify(storeData));
+    }
+
+    function renderLiveBalls(elementId, numbersArray) {
+        const container = document.getElementById(elementId);
+        container.innerHTML = '';
+        numbersArray.forEach(n => {
+            const ball = document.createElement('div');
+            ball.className = 'badge-ball';
+            ball.textContent = String(n).padStart(2, '0');
+            container.appendChild(ball);
+        });
+    }
+
+    /* RELATÓRIO E COMPROVANTE */
+    function openReceiptModal() {
+        renderReceiptUI();
+        document.getElementById('modalReceiptOverlay').classList.add('active');
+    }
+
+    function closeReceiptModal() {
+        document.getElementById('modalReceiptOverlay').classList.remove('active');
+    }
+
+    function renderReceiptUI() {
+        // Renderiza Dezenas Geradas pelo App
+        const appList = document.getElementById('receiptAppGenerated');
+        appList.innerHTML = '';
+        if (storeData.appGenerated.length === 0) {
+            appList.innerHTML = '<li style="font-style:italic; color:#777;">Nenhuma dezena gerada ainda.</li>';
+        } else {
+            storeData.appGenerated.slice(0, 10).forEach(item => {
+                const li = document.createElement('li');
+                li.className = 'receipt-item';
+                li.innerHTML = `
+                    <div class="receipt-item-header">
+                        <span>[${item.type} DEZENAS] ${item.date}</span>
+                        <span>${item.time}</span>
+                    </div>
+                    <div><b>Dezenas:</b> ${item.numbers}</div>
+                `;
+                appList.appendChild(li);
+            });
+        }
+
+        // Renderiza Histórico do Jogo Escolhido vs Oficial
+        const officialList = document.getElementById('receiptOfficialHistory');
+        officialList.innerHTML = '';
+        if (storeData.officialHistory.length === 0) {
+            officialList.innerHTML = '<li style="font-style:italic; color:#777;">Nenhum confronto registrado.</li>';
+        } else {
+            storeData.officialHistory.slice(0, 10).forEach(item => {
+                const li = document.createElement('li');
+                li.className = 'receipt-item';
+                li.innerHTML = `
+                    <div class="receipt-item-header">
+                        <span>CONCURSO nº ${item.contest} (${item.type} DEZENAS)</span>
+                        <span>${item.date}</span>
+                    </div>
+                    <div><b>Meu Jogo:</b> ${item.myGame}</div>
+                    <div><b>Oficial:</b> ${item.official}</div>
+                    <div style="color: #008000; font-weight: bold;"><b>Acertos (${item.hitsCount}):</b> ${item.hitsList}</div>
+                `;
+                officialList.appendChild(li);
+            });
+        }
+    }
+
+    function exportToTxt() {
+        const dateFormatted = new Date().toISOString().split('T')[0];
+        let content = `=========================================\n`;
+        content += `    RELATÓRIO DE DEZENAS E CONFERÊNCIA   \n`;
+        content += `    Data de Exportação: ${new Date().toLocaleString('pt-BR')}\n`;
+        content += `=========================================\n\n`;
+
+        content += `--- DEZENAS GERADAS PELO APLICATIVO ---\n`;
+        if (storeData.appGenerated.length === 0) {
+            content += `(Sem registros)\n`;
+        } else {
+            storeData.appGenerated.forEach(item => {
+                content += `[${item.date} ${item.time}] (${item.type} Dezenas): ${item.numbers}\n`;
+            });
+        }
+
+        content += `\n--- HISTÓRICO DE JOGOS X SORTEIOS OFICIAIS ---\n`;
+        if (storeData.officialHistory.length === 0) {
+            content += `(Sem registros)\n`;
+        } else {
+            storeData.officialHistory.forEach(item => {
+                content += `[Concurso: ${item.contest}] (${item.date})\n`;
+                content += ` - Meu Jogo: ${item.myGame}\n`;
+                content += ` - Oficial:  ${item.official}\n`;
+                content += ` - Acertos (${item.hitsCount}): ${item.hitsList}\n\n`;
+            });
+        }
+
+        content += `=========================================\n`;
+
+        const blob = new Blob([content], { type: 'text/plain;charset=utf-8' });
+        const link = document.createElement('a');
+        link.href = URL.createObjectURL(blob);
+        link.download = `relatorio_dezenas_${dateFormatted}.txt`;
+        link.click();
+    }
+
+    renderSlots();
+</script>
+
+</body>
+</html>
